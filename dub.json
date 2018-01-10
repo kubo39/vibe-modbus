@@ -1,0 +1,12 @@
+{
+	"name": "vibe-modbus",
+	"authors": [
+		"Hiroki Noda"
+	],
+	"dependencies": {
+		"vibe-d:core": "0.8.2"
+	},
+	"description": "A minimal D application.",
+	"copyright": "Copyright © 2018, Hiroki Noda",
+	"license": "proprietary"
+}

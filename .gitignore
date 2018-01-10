@@ -1,0 +1,14 @@
+.dub
+docs.json
+__dummy.html
+docs/
+vibe-modbus.so
+vibe-modbus.dylib
+vibe-modbus.dll
+vibe-modbus.a
+vibe-modbus.lib
+vibe-modbus-test-*
+*.exe
+*.[oa]
+*.obj
+*.lst

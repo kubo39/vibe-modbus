@@ -11,30 +11,14 @@ import vibemodbus.protocol.common;
 import vibemodbus.protocol.tcp;
 import vibemodbus.tcp.common;
 
-
 Request decodeRequest(TCPConnection conn)
 {
+    Request req;
     ubyte[] buffer;
 
     conn.read(buffer);
     enforce!TooSmallADU(buffer.length >= MBAP_HEADER_LEN, "Too small ADU length.");
-
-    // Start parsing MBAP header.
-    auto transactionId = buffer.read!(ushort, Endian.bigEndian);
-    auto protocolId = buffer.read!(ushort, Endian.bigEndian);
-    enforce!InvalidProtocolID(protocolId == PROTOCOL_ID, "Invalid Protocol ID.");
-
-    // length = bytes of PDU + unit ID.
-    auto length = buffer.read!(ushort, Endian.bigEndian);
-    auto unitId = buffer.read!(ubyte, Endian.bigEndian);
-
-    Request req;
-    req.header.transactionId = transactionId;
-    req.header.protocolId = protocolId;
-    req.header.length = length;
-    req.header.unitId = unitId;
-
-    decodePDU(buffer[MBAP_HEADER_LEN .. (MBAP_HEADER_LEN + length - 1)], &req.pdu);
+    decodeADU(buffer, &req);
     return req;
 }
 

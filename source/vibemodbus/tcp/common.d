@@ -54,3 +54,23 @@ void decodePDU(ubyte[] data, Pdu* pdu)
     pdu.functionCode = functionCode;
     pdu.data = data[1..$];
 }
+
+
+void decodeADU(ubyte[] buffer, Adu* adu)
+{
+    // Start parsing MBAP header.
+    auto transactionId = buffer.read!(ushort, Endian.bigEndian);
+    auto protocolId = buffer.read!(ushort, Endian.bigEndian);
+    enforce!InvalidProtocolID(protocolId == PROTOCOL_ID, "Invalid Protocol ID.");
+
+    // length = bytes of PDU + unit ID.
+    auto length = buffer.read!(ushort, Endian.bigEndian);
+    auto unitId = buffer.read!(ubyte, Endian.bigEndian);
+
+    adu.header.transactionId = transactionId;
+    adu.header.protocolId = protocolId;
+    adu.header.length = length;
+    adu.header.unitId = unitId;
+
+    decodePDU(buffer[MBAP_HEADER_LEN .. (MBAP_HEADER_LEN + length - 1)], &adu.pdu);
+}

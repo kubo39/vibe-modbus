@@ -33,21 +33,7 @@ Response request(NetworkAddress addr, Request req)
     conn.read(buffer);
     enforce!TooSmallADU(buffer.length >= MBAP_HEADER_LEN, "Too small ADU length.");
 
-    // Start parsing MBAP header.
-    auto transactionId = buffer.read!(ushort, Endian.bigEndian);
-    auto protocolId = buffer.read!(ushort, Endian.bigEndian);
-    enforce!InvalidProtocolID(protocolId == PROTOCOL_ID, "Invalid Protocol ID.");
-
-    // length = bytes of PDU + unit ID.
-    auto length = buffer.read!(ushort, Endian.bigEndian);
-    auto unitId = buffer.read!(ubyte, Endian.bigEndian);
-
     Response res;
-    res.header.transactionId = transactionId;
-    res.header.protocolId = protocolId;
-    res.header.length = length;
-    res.header.unitId = unitId;
-
-    decodePDU(buffer[MBAP_HEADER_LEN .. (MBAP_HEADER_LEN + length - 1)], &res.pdu);
+    decodeADU(buffer, &res);
     return res;
 }

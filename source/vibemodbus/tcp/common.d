@@ -131,6 +131,4 @@ unittest
     assert(adu.header == MBAPHeader(0x11, 0x0, 0x6, 0x0));
     assert(adu.pdu.functionCode == FunctionCode.ReadCoils);
     assert(adu.pdu.data == [0x0, 0x0, 0x0, 0x0]);
-    import std.stdio;
-    writeln(buffer);
 }

@@ -12,9 +12,9 @@ alias Request = Adu;
 alias Response = Adu;
 
 
-ubyte[] encodeMBAPHeader(MBAPHeader header)
+// Write MBAP Header fields.
+void encodeMBAPHeader(ubyte[] buffer, MBAPHeader header)
 {
-    ubyte[] buffer;
     size_t index = 0;
     buffer.write!(ushort, Endian.bigEndian)(header.transactionId, &index);
     assert(index == 2);
@@ -24,9 +24,18 @@ ubyte[] encodeMBAPHeader(MBAPHeader header)
     assert(index == 6);
     buffer.write!(ubyte, Endian.bigEndian)(header.unitId, &index);
     assert(index == 7);
-    return buffer;
 }
 
+ubyte[] encodeADU(Adu adu)
+{
+    ubyte[] buffer;
+    size_t index = MBAP_HEADER_LEN;
+    encodeMBAPHeader(buffer, adu.header);
+    buffer.write!(ubyte, Endian.bigEndian)(adu.pdu.functionCode, &index);
+    assert(index == 8);
+    buffer ~= adu.pdu.data;
+    return buffer;
+}
 
 void decodePDU(ubyte[] data, Pdu* pdu)
 {

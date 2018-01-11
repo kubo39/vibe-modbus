@@ -17,14 +17,7 @@ Response request(NetworkAddress addr, Request req)
 {
     auto conn = connectTCP(addr);
 
-    // Write MBAP Header fields.
-    ubyte[] header = encodeMBAPHeader(req.header);
-    conn.write(header);
-
-    // Write PDU.
-    conn.write([req.pdu.functionCode]);
-    conn.write(req.pdu.data);
-
+    conn.write(encodeADU(req));
     // Send data.
     conn.flush();
 

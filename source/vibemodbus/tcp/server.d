@@ -22,17 +22,9 @@ Request decodeRequest(TCPConnection conn)
     return req;
 }
 
-void encodeResponse(TCPConnection conn, const Response* res)
+void encodeResponse(TCPConnection conn, Response res)
 {
-    // Write MBAP Header fields.
-    auto header = encodeMBAPHeader(res.header);
-    conn.write(header);
-
-    // Write PDU.
-    conn.write([res.pdu.functionCode]);
-    conn.write(res.pdu.data);
-
-    // Send data.
+    conn.write(encodeADU(res));
     conn.flush();
 }
 
@@ -57,6 +49,6 @@ TCPListener listenTCP(ushort port, void delegate(Request*, Response*) del,
             // length = bytes of PDU(Function Code and Data) + unit ID.
             res.header.length = cast(ushort)(res.pdu.data.length + 1 + 1);
 
-            encodeResponse(conn, &res);
+            encodeResponse(conn, res);
         }, address);
 }

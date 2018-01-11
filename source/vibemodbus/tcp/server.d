@@ -52,10 +52,10 @@ void encodeResponse(TCPConnection conn, const Response* res)
     conn.flush();
 }
 
-void listen(ushort port, string address,
-            void delegate(Request*, Response*) del = null)
+TCPListener listenTCP(ushort port, void delegate(Request*, Response*) del,
+                      string address)
 {
-    auto listener = listenTCP(port, (TCPConnection conn) {
+    return vibe.core.net.listenTCP(port, (TCPConnection conn) {
             auto req = decodeRequest(conn);
 
             // stream data size > MAX_TCP_APU_SIZE or data-length is longer than

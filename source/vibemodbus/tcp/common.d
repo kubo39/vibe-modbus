@@ -29,10 +29,8 @@ void encodeMBAPHeader(ubyte[] buffer, MBAPHeader header)
 ubyte[] encodeADU(Adu adu)
 {
     ubyte[] buffer;
-    size_t index = MBAP_HEADER_LEN;
     encodeMBAPHeader(buffer, adu.header);
-    buffer.write!(ubyte, Endian.bigEndian)(adu.pdu.functionCode, &index);
-    assert(index == 8);
+    buffer ~= adu.pdu.functionCode;
     buffer ~= adu.pdu.data;
     return buffer;
 }

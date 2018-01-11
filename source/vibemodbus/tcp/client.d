@@ -13,20 +13,170 @@ import vibemodbus.tcp.common;
 
 
 // TODO:
-Response request(NetworkAddress addr, Request req)
+struct Client
 {
-    auto conn = connectTCP(addr);
+    NetworkAddress addr;
 
-    conn.write(encodeADU(req));
-    // Send data.
-    conn.flush();
+    this(NetworkAddress addr)
+    {
+        this.addr = addr;
+    }
 
-    // Read response data.
-    ubyte[] buffer;
-    conn.read(buffer);
-    enforce!TooSmallADU(buffer.length >= MBAP_HEADER_LEN, "Too small ADU length.");
+    Response request(Request req)
+    {
+        auto conn = connectTCP(this.addr);
 
-    Response res;
-    decodeADU(buffer, &res);
-    return res;
+        conn.write(encodeADU(req));
+        // Send data.
+        conn.flush();
+
+        // Read response data.
+        ubyte[] buffer;
+        conn.read(buffer);
+        enforce!TooSmallADU(buffer.length >= MBAP_HEADER_LEN, "Too small ADU length.");
+
+        Response res;
+        decodeADU(buffer, &res);
+        return res;
+    }
+
+    Response readCoils(ushort startingAddress, ushort quantity)
+    {
+        ubyte[] data;
+        size_t index = 0;
+        data.write!(ushort, Endian.bigEndian)(startingAddress, &index);
+        assert(index == 2);
+        data.write!(ushort, Endian.bigEndian)(quantity, &index);
+        assert(index == 4);
+        auto length = cast(ushort)(1 + 1 + data.length);
+        auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
+                           Pdu(FunctionCode.ReadCoils, data));
+        return request(req);
+    }
+
+    Response readDiscreteInputs(ushort startingAddress, ushort quantity)
+    {
+        ubyte[] data;
+        size_t index = 0;
+        data.write!(ushort, Endian.bigEndian)(startingAddress, &index);
+        assert(index == 2);
+        data.write!(ushort, Endian.bigEndian)(quantity, &index);
+        assert(index == 4);
+        auto length = cast(short)(1 + 1 + data.length);
+        auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
+                           Pdu(FunctionCode.ReadDiscreteInputs, data));
+        return request(req);
+    }
+
+    Response readHoldingRegisters(ushort startingAddress, ushort quantity)
+    {
+        ubyte[] data;
+        size_t index = 0;
+        data.write!(ushort, Endian.bigEndian)(startingAddress, &index);
+        assert(index == 2);
+        data.write!(ushort, Endian.bigEndian)(quantity, &index);
+        assert(index == 4);
+        auto length = cast(short)(1 + 1 + data.length);
+        auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
+                           Pdu(FunctionCode.ReadHoldingRegisters, data));
+        return request(req);
+    }
+
+    Response readInputRegisters(ushort startingAddress, ushort quantity)
+    {
+        ubyte[] data;
+        size_t index = 0;
+        data.write!(ushort, Endian.bigEndian)(startingAddress, &index);
+        assert(index == 2);
+        data.write!(ushort, Endian.bigEndian)(quantity, &index);
+        assert(index == 4);
+        auto length = cast(short)(1 + 1 + data.length);
+        auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
+                           Pdu(FunctionCode.ReadInputRegisters, data));
+        return request(req);
+    }
+
+    Response writeSingleCoil(ushort outputAddress, ushort outputValue)
+    {
+        ubyte[] data;
+        size_t index = 0;
+        data.write!(ushort, Endian.bigEndian)(outputAddress, &index);
+        assert(index == 2);
+        data.write!(ushort, Endian.bigEndian)(outputValue, &index);
+        assert(index == 4);
+        auto length = cast(short)(1 + 1 + data.length);
+        auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
+                           Pdu(FunctionCode.WriteSingleCoil, data));
+        return request(req);
+    }
+
+    Response writeSingleRegister(ushort registerAddress, ushort registerValue)
+    {
+        ubyte[] data;
+        size_t index = 0;
+        data.write!(ushort, Endian.bigEndian)(registerAddress, &index);
+        assert(index == 2);
+        data.write!(ushort, Endian.bigEndian)(registerValue, &index);
+        assert(index == 4);
+        auto length = cast(short)(1 + 1 + data.length);
+        auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
+                           Pdu(FunctionCode.WriteSingleRegister, data));
+        return request(req);
+    }
+
+    Response writeMultipleCoils(ushort startingAddress, ushort quantity,
+                                ubyte byteCount, ubyte[] outputValue)
+    {
+        ubyte[] data;
+        size_t index = 0;
+        data.write!(ushort, Endian.bigEndian)(startingAddress, &index);
+        assert(index == 2);
+        data.write!(ushort, Endian.bigEndian)(quantity, &index);
+        assert(index == 4);
+        data ~= byteCount;
+        data ~= outputValue;
+        auto length = cast(short)(1 + 1 + data.length);
+        auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
+                           Pdu(FunctionCode.WriteMultipleCoils, data));
+        return request(req);
+    }
+
+    Response writeMultipleRegisters(ushort startingAddress, ushort quantity,
+                                    ubyte byteCount, ubyte[] registersValue)
+    {
+        ubyte[] data;
+        size_t index = 0;
+        data.write!(ushort, Endian.bigEndian)(startingAddress, &index);
+        assert(index == 2);
+        data.write!(ushort, Endian.bigEndian)(quantity, &index);
+        assert(index == 4);
+        data ~= byteCount;
+        data ~= registersValue;
+        auto length = cast(short)(1 + 1 + data.length);
+        auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
+                           Pdu(FunctionCode.WriteMultipleRegisters, data));
+        return request(req);
+    }
+
+    Response readWriteMultipleRegisters(ushort readStartingAddress, ushort readQuantity,
+                                        ushort writeStartingAddress, ushort writeQuantity,
+                                        ubyte byteCount, ubyte[] registersValue)
+    {
+        ubyte[] data;
+        size_t index = 0;
+        data.write!(ushort, Endian.bigEndian)(readStartingAddress, &index);
+        assert(index == 2);
+        data.write!(ushort, Endian.bigEndian)(readQuantity, &index);
+        assert(index == 4);
+        data.write!(ushort, Endian.bigEndian)(writeStartingAddress, &index);
+        assert(index == 6);
+        data.write!(ushort, Endian.bigEndian)(writeQuantity, &index);
+        assert(index == 8);
+        data ~= byteCount;
+        data ~= registersValue;
+        auto length = cast(short)(1 + 1 + data.length);
+        auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
+                           Pdu(FunctionCode.ReadWriteMultipleRegisters, data));
+        return request(req);
+    }
 }

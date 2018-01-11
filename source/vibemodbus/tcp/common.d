@@ -8,8 +8,8 @@ import vibemodbus.exception;
 import vibemodbus.protocol.common;
 import vibemodbus.protocol.tcp;
 
-alias Request = Adu;
-alias Response = Adu;
+alias Request = TCPAdu;
+alias Response = TCPAdu;
 
 
 // Write MBAP Header fields.
@@ -26,7 +26,7 @@ void encodeMBAPHeader(ubyte[] buffer, MBAPHeader header)
     assert(index == 7);
 }
 
-ubyte[] encodeADU(Adu adu)
+ubyte[] encodeADU(TCPAdu adu)
 {
     ubyte[] buffer;
     encodeMBAPHeader(buffer, adu.header);
@@ -63,7 +63,7 @@ void decodePDU(ubyte[] data, Pdu* pdu)
 }
 
 
-void decodeADU(ubyte[] buffer, Adu* adu)
+void decodeADU(ubyte[] buffer, TCPAdu* adu)
 {
     // Start parsing MBAP header.
     auto transactionId = buffer.read!(ushort, Endian.bigEndian);

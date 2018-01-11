@@ -29,7 +29,7 @@ struct Pdu
     ubyte[] data;
 }
 
-struct Adu
+struct TCPAdu
 {
     MBAPHeader header;
     Pdu pdu;

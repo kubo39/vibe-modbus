@@ -26,13 +26,30 @@ void encodeMBAPHeader(ubyte[] buffer, MBAPHeader header)
     assert(index == 7);
 }
 
+unittest
+{
+    ubyte[] buffer = new ubyte[MBAP_HEADER_LEN];
+    MBAPHeader header = MBAPHeader(0x11, PROTOCOL_ID, 3, 1);
+    encodeMBAPHeader(buffer, header);
+    assert(buffer == [0x0, 0x11, 0x0, 0x0, 0x0, 0x3, 0x1]);
+}
+
 ubyte[] encodeADU(TCPAdu adu)
 {
-    ubyte[] buffer;
+    ubyte[] buffer = new ubyte[MBAP_HEADER_LEN];
     encodeMBAPHeader(buffer, adu.header);
     buffer ~= adu.pdu.functionCode;
     buffer ~= adu.pdu.data;
     return buffer;
+}
+
+unittest
+{
+    TCPAdu adu = TCPAdu(MBAPHeader(0x11, PROTOCOL_ID, 4, 1),
+                        Pdu(0x1, [0x0, 0x0]));
+    auto ret = encodeADU(adu);
+    assert(ret == [0x0, 0x11, 0x0, 0x0, 0x0, 0x4, 0x1, // MBAP Header
+                   0x1, 0x0, 0x0]);
 }
 
 void decodePDU(ubyte[] data, Pdu* pdu)
@@ -62,6 +79,24 @@ void decodePDU(ubyte[] data, Pdu* pdu)
     pdu.data = data[1..$];
 }
 
+unittest
+{
+    {
+        Pdu pdu;
+        ubyte[] data = [0x1, 0x0, 0x0];
+        decodePDU(data, &pdu);
+        assert(pdu.functionCode == FunctionCode.ReadCoils);
+        assert(pdu.data == [0x0, 0x0]);
+    }
+
+    // Invalid FunctionCode
+    {
+        import std.exception : assertThrown;
+        Pdu pdu;
+        ubyte[] data = [0x0, 0x0, 0x0];
+        assertThrown(decodePDU(data, &pdu));
+    }
+}
 
 void decodeADU(ubyte[] buffer, TCPAdu* adu)
 {
@@ -79,5 +114,23 @@ void decodeADU(ubyte[] buffer, TCPAdu* adu)
     adu.header.length = length;
     adu.header.unitId = unitId;
 
-    decodePDU(buffer[MBAP_HEADER_LEN .. (MBAP_HEADER_LEN + length - 1)], &adu.pdu);
+    decodePDU(buffer[0 .. (length - 1)], &adu.pdu);
+}
+
+unittest
+{
+    TCPAdu adu;
+    ubyte[] buffer = [0x0, 0x11,  // transaction id
+                      0x0, 0x0,   // protocol id
+                      0x0, 0x6,   // length (unit id + length(pdu))
+                      0x0,        // unit id
+                      0x1,        // function code
+                      0x0, 0x0, 0x0, 0x0  // data
+        ];
+    decodeADU(buffer, &adu);
+    assert(adu.header == MBAPHeader(0x11, 0x0, 0x6, 0x0));
+    assert(adu.pdu.functionCode == FunctionCode.ReadCoils);
+    assert(adu.pdu.data == [0x0, 0x0, 0x0, 0x0]);
+    import std.stdio;
+    writeln(buffer);
 }

@@ -44,7 +44,7 @@ struct Client
 
     Response readCoils(ushort startingAddress, ushort quantity)
     {
-        ubyte[] data;
+        ubyte[] data = new ubyte[4];
         size_t index = 0;
         data.write!(ushort, Endian.bigEndian)(startingAddress, &index);
         assert(index == 2);
@@ -58,7 +58,7 @@ struct Client
 
     Response readDiscreteInputs(ushort startingAddress, ushort quantity)
     {
-        ubyte[] data;
+        ubyte[] data = new ubyte[4];
         size_t index = 0;
         data.write!(ushort, Endian.bigEndian)(startingAddress, &index);
         assert(index == 2);
@@ -72,7 +72,7 @@ struct Client
 
     Response readHoldingRegisters(ushort startingAddress, ushort quantity)
     {
-        ubyte[] data;
+        ubyte[] data = new ubyte[4];
         size_t index = 0;
         data.write!(ushort, Endian.bigEndian)(startingAddress, &index);
         assert(index == 2);
@@ -86,7 +86,7 @@ struct Client
 
     Response readInputRegisters(ushort startingAddress, ushort quantity)
     {
-        ubyte[] data;
+        ubyte[] data = new ubyte[4];
         size_t index = 0;
         data.write!(ushort, Endian.bigEndian)(startingAddress, &index);
         assert(index == 2);
@@ -100,7 +100,7 @@ struct Client
 
     Response writeSingleCoil(ushort outputAddress, ushort outputValue)
     {
-        ubyte[] data;
+        ubyte[] data = new ubyte[4];
         size_t index = 0;
         data.write!(ushort, Endian.bigEndian)(outputAddress, &index);
         assert(index == 2);
@@ -114,7 +114,7 @@ struct Client
 
     Response writeSingleRegister(ushort registerAddress, ushort registerValue)
     {
-        ubyte[] data;
+        ubyte[] data = new ubyte[4];
         size_t index = 0;
         data.write!(ushort, Endian.bigEndian)(registerAddress, &index);
         assert(index == 2);
@@ -129,7 +129,7 @@ struct Client
     Response writeMultipleCoils(ushort startingAddress, ushort quantity,
                                 ubyte byteCount, ubyte[] outputValue)
     {
-        ubyte[] data;
+        ubyte[] data = new ubyte[5 + outputValue.length];
         size_t index = 0;
         data.write!(ushort, Endian.bigEndian)(startingAddress, &index);
         assert(index == 2);
@@ -146,7 +146,7 @@ struct Client
     Response writeMultipleRegisters(ushort startingAddress, ushort quantity,
                                     ubyte byteCount, ubyte[] registersValue)
     {
-        ubyte[] data;
+        ubyte[] data = new ubyte[5 + registersValue.length];
         size_t index = 0;
         data.write!(ushort, Endian.bigEndian)(startingAddress, &index);
         assert(index == 2);
@@ -164,7 +164,7 @@ struct Client
                                         ushort writeStartingAddress, ushort writeQuantity,
                                         ubyte byteCount, ubyte[] registersValue)
     {
-        ubyte[] data;
+        ubyte[] data = new ubyte[9 + registersValue.length];
         size_t index = 0;
         data.write!(ushort, Endian.bigEndian)(readStartingAddress, &index);
         assert(index == 2);

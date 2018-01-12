@@ -40,22 +40,20 @@ void encodePDU(ubyte[] buffer, Pdu pdu)
     buffer[1 .. $] = pdu.data;
 }
 
-ubyte[] encodeADU(TCPAdu adu)
+void encodeADU(ubyte[] buffer, TCPAdu adu)
 {
-    size_t len = MBAP_HEADER_LEN + adu.header.length - 1;
-    ubyte[] buffer = new ubyte[len];
     encodeMBAPHeader(buffer, adu.header);
     encodePDU(buffer[MBAP_HEADER_LEN .. $], adu.pdu);
-    return buffer;
 }
 
 unittest
 {
     TCPAdu adu = TCPAdu(MBAPHeader(0x11, PROTOCOL_ID, 4, 1),
                         Pdu(0x1, [0x0, 0x0]));
-    auto ret = encodeADU(adu);
-    assert(ret == [0x0, 0x11, 0x0, 0x0, 0x0, 0x4, 0x1, // MBAP Header
-                   0x1, 0x0, 0x0]);
+    ubyte[] buffer = new ubyte[MBAP_HEADER_LEN + adu.header.length - 1];
+    encodeADU(buffer, adu);
+    assert(buffer == [0x0, 0x11, 0x0, 0x0, 0x0, 0x4, 0x1, // MBAP Header
+                      0x1, 0x0, 0x0]);
 }
 
 void decodeMBAPHeader(ref ubyte[] data, MBAPHeader* header)

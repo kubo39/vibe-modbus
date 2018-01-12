@@ -32,15 +32,9 @@ struct Client
             conn.close();
         }
 
-        ubyte[] header = new ubyte[MBAP_HEADER_LEN];
-        encodeMBAPHeader(header, req.header);
-
-        conn.write(header);
-        ubyte[] pdu = new ubyte[req.header.length - 1];
-        encodePDU(pdu, req.pdu);
-        conn.write(pdu);
-
-        // Send data.
+        ubyte[] buffer = new ubyte[MBAP_HEADER_LEN + req.header.length - 1];
+        encodeADU(buffer, req);
+        conn.write(buffer);
         conn.flush();
 
         Response res;

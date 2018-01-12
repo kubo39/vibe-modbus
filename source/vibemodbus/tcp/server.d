@@ -20,7 +20,9 @@ Request decodeRequest(ref ubyte[] buffer)
 
 void encodeResponse(TCPConnection conn, Response res)
 {
-    conn.write(encodeADU(res));
+    ubyte[] buffer = new ubyte[MBAP_HEADER_LEN + res.header.length - 1];
+    encodeADU(buffer, res);
+    conn.write(buffer);
     conn.finalize();
 }
 

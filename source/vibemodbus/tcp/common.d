@@ -5,8 +5,8 @@ import std.exception : enforce;
 import std.system : Endian;
 
 import vibemodbus.exception;
-import vibemodbus.protocol.common;
-import vibemodbus.protocol.tcp;
+public import vibemodbus.protocol.common;
+public import vibemodbus.protocol.tcp;
 
 alias Request = TCPAdu;
 alias Response = TCPAdu;

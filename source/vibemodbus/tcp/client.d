@@ -6,25 +6,27 @@ import std.system : Endian;
 
 import vibe.core.net;
 
-import vibemodbus.exception;
-import vibemodbus.protocol.common;
-import vibemodbus.protocol.tcp;
-import vibemodbus.tcp.common;
+public import vibemodbus.exception;
+public import vibemodbus.protocol.common;
+public import vibemodbus.protocol.tcp;
+public import vibemodbus.tcp.common;
 
 
 // TODO:
 struct Client
 {
-    NetworkAddress addr;
+    string host;
+    ushort port;
 
-    this(NetworkAddress addr)
+    this(string host, ushort port)
     {
-        this.addr = addr;
+        this.host = host;
+        this.port = port;
     }
 
     Response request(Request req)
     {
-        auto conn = connectTCP(this.addr);
+        auto conn = connectTCP(this.host, this.port);
 
         conn.write(encodeADU(req));
         // Send data.

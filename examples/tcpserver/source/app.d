@@ -68,6 +68,6 @@ void zeroHandler(const Request* req, Response* res)
 
 void main()
 {
-    vibemodbus.tcp.server.listenTCP(ushort(40960), toDelegate(&zeroHandler), "localhost");
+    vibemodbus.tcp.server.listenTCP(ushort(40960), toDelegate(&zeroHandler), "127.0.0.1");
     runApplication();
 }

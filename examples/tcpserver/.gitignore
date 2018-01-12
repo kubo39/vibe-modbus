@@ -1,0 +1,15 @@
+tcpserver
+.dub
+docs.json
+__dummy.html
+docs/
+tcpserver.so
+tcpserver.dylib
+tcpserver.dll
+tcpserver.a
+tcpserver.lib
+tcpserver-test-*
+*.exe
+*.o
+*.obj
+*.lst

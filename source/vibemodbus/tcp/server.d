@@ -6,10 +6,10 @@ import std.system : Endian;
 
 import vibe.core.net;
 
-import vibemodbus.exception;
-import vibemodbus.protocol.common;
-import vibemodbus.protocol.tcp;
-import vibemodbus.tcp.common;
+public import vibemodbus.exception;
+public import vibemodbus.protocol.common;
+public import vibemodbus.protocol.tcp;
+public import vibemodbus.tcp.common;
 
 Request decodeRequest(TCPConnection conn)
 {
@@ -28,11 +28,12 @@ void encodeResponse(TCPConnection conn, Response res)
     conn.flush();
 }
 
-TCPListener listenTCP(ushort port, void delegate(Request*, Response*) del,
+TCPListener listenTCP(ushort port, void delegate(const Request*, Response*) del,
                       string address)
 {
     return vibe.core.net.listenTCP(port, (TCPConnection conn) {
-            auto req = decodeRequest(conn);
+            Request req;
+            req = decodeRequest(conn);
 
             // stream data size > MAX_TCP_APU_SIZE or data-length is longer than
             // length field.

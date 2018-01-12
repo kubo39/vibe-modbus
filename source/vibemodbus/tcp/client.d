@@ -43,13 +43,18 @@ struct Client
         // Send data.
         conn.flush();
 
-        // Read response data.
-        ubyte[] buffer = new ubyte[MAX_TCP_APU_SIZE];
-        conn.read(buffer);
-        enforce!TooSmallADU(buffer.length >= MBAP_HEADER_LEN, "Too small ADU length.");
-
         Response res;
-        decodeADU(buffer, &res);
+
+        // Read response data.
+        ubyte[] responseHeader = new ubyte[MBAP_HEADER_LEN];
+        conn.read(responseHeader);
+        enforce!TooSmallADU(responseHeader.length >= MBAP_HEADER_LEN, "Too small ADU length.");
+        decodeMBAPHeader(responseHeader, &res.header);
+
+        // Read response data.
+        ubyte[] responsePdu = new ubyte[res.header.length - 1];
+        conn.read(responsePdu);
+        decodePDU(responsePdu, &res.pdu);
 
         return res;
     }

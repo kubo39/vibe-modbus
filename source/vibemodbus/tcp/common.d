@@ -34,12 +34,18 @@ unittest
     assert(buffer == [0x0, 0x11, 0x0, 0x0, 0x0, 0x3, 0x1]);
 }
 
+void encodePDU(ubyte[] buffer, Pdu pdu)
+{
+    buffer[0] = pdu.functionCode;
+    buffer[1 .. $] = pdu.data;
+}
+
 ubyte[] encodeADU(TCPAdu adu)
 {
-    ubyte[] buffer = new ubyte[MBAP_HEADER_LEN];
+    size_t len = MBAP_HEADER_LEN + adu.header.length - 1;
+    ubyte[] buffer = new ubyte[len];
     encodeMBAPHeader(buffer, adu.header);
-    buffer ~= adu.pdu.functionCode;
-    buffer ~= adu.pdu.data;
+    encodePDU(buffer[MBAP_HEADER_LEN .. $], adu.pdu);
     return buffer;
 }
 
@@ -50,6 +56,23 @@ unittest
     auto ret = encodeADU(adu);
     assert(ret == [0x0, 0x11, 0x0, 0x0, 0x0, 0x4, 0x1, // MBAP Header
                    0x1, 0x0, 0x0]);
+}
+
+void decodeMBAPHeader(ref ubyte[] data, MBAPHeader* header)
+{
+    // Start parsing MBAP header.
+    auto transactionId = data.read!(ushort, Endian.bigEndian);
+    auto protocolId = data.read!(ushort, Endian.bigEndian);
+    enforce!InvalidProtocolID(protocolId == PROTOCOL_ID, "Invalid Protocol ID.");
+
+    // length = bytes of PDU + unit ID.
+    auto length = data.read!(ushort, Endian.bigEndian);
+    auto unitId = data.read!(ubyte, Endian.bigEndian);
+
+    header.transactionId = transactionId;
+    header.protocolId = protocolId;
+    header.length = length;
+    header.unitId = unitId;
 }
 
 void decodePDU(ubyte[] data, Pdu* pdu)
@@ -100,21 +123,8 @@ unittest
 
 void decodeADU(ubyte[] buffer, TCPAdu* adu)
 {
-    // Start parsing MBAP header.
-    auto transactionId = buffer.read!(ushort, Endian.bigEndian);
-    auto protocolId = buffer.read!(ushort, Endian.bigEndian);
-    enforce!InvalidProtocolID(protocolId == PROTOCOL_ID, "Invalid Protocol ID.");
-
-    // length = bytes of PDU + unit ID.
-    auto length = buffer.read!(ushort, Endian.bigEndian);
-    auto unitId = buffer.read!(ubyte, Endian.bigEndian);
-
-    adu.header.transactionId = transactionId;
-    adu.header.protocolId = protocolId;
-    adu.header.length = length;
-    adu.header.unitId = unitId;
-
-    decodePDU(buffer[0 .. (length - 1)], &adu.pdu);
+    decodeMBAPHeader(buffer, &adu.header);
+    decodePDU(buffer[0 .. (adu.header.length - 1)], &adu.pdu);
 }
 
 unittest

@@ -27,18 +27,30 @@ struct Client
     Response request(Request req)
     {
         auto conn = connectTCP(this.host, this.port);
+        scope (exit) {
+            conn.finalize();
+            conn.close();
+        }
 
-        conn.write(encodeADU(req));
+        ubyte[] header = new ubyte[MBAP_HEADER_LEN];
+        encodeMBAPHeader(header, req.header);
+
+        conn.write(header);
+        ubyte[] pdu = new ubyte[req.header.length - 1];
+        encodePDU(pdu, req.pdu);
+        conn.write(pdu);
+
         // Send data.
         conn.flush();
 
         // Read response data.
-        ubyte[] buffer;
+        ubyte[] buffer = new ubyte[MAX_TCP_APU_SIZE];
         conn.read(buffer);
         enforce!TooSmallADU(buffer.length >= MBAP_HEADER_LEN, "Too small ADU length.");
 
         Response res;
         decodeADU(buffer, &res);
+
         return res;
     }
 

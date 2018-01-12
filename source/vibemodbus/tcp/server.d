@@ -11,13 +11,9 @@ public import vibemodbus.protocol.common;
 public import vibemodbus.protocol.tcp;
 public import vibemodbus.tcp.common;
 
-Request decodeRequest(TCPConnection conn)
+Request decodeRequest(ref ubyte[] buffer)
 {
     Request req;
-    ubyte[] buffer;
-
-    conn.read(buffer);
-    enforce!TooSmallADU(buffer.length >= MBAP_HEADER_LEN, "Too small ADU length.");
     decodeADU(buffer, &req);
     return req;
 }
@@ -25,7 +21,7 @@ Request decodeRequest(TCPConnection conn)
 void encodeResponse(TCPConnection conn, Response res)
 {
     conn.write(encodeADU(res));
-    conn.flush();
+    conn.finalize();
 }
 
 TCPListener listenTCP(ushort port, void delegate(const Request*, Response*) del,
@@ -33,7 +29,16 @@ TCPListener listenTCP(ushort port, void delegate(const Request*, Response*) del,
 {
     return vibe.core.net.listenTCP(port, (TCPConnection conn) {
             Request req;
-            req = decodeRequest(conn);
+
+            ubyte[] buffer1 = new ubyte[MBAP_HEADER_LEN];
+            conn.read(buffer1);
+            enforce!TooSmallADU(buffer1.length >= MBAP_HEADER_LEN, "Too small ADU length.");
+
+
+            decodeMBAPHeader(buffer1, &req.header);
+            ubyte[] buffer2 = new ubyte[req.header.length - 1];
+            conn.read(buffer2);
+            decodePDU(buffer2, &req.pdu);
 
             // stream data size > MAX_TCP_APU_SIZE or data-length is longer than
             // length field.

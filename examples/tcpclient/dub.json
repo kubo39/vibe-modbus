@@ -1,0 +1,12 @@
+{
+	"name": "tcpclient",
+	"authors": [
+		"Hiroki Noda"
+	],
+    "dependencies": {
+        "vibe-d:core": "0.8.2",
+        "vibe-modbus": {"path": "../../"}
+    },
+	"copyright": "Copyright © 2018, Hiroki Noda",
+	"license": "proprietary"
+}

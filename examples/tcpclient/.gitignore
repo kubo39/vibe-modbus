@@ -1,0 +1,15 @@
+tcpclient
+.dub
+docs.json
+__dummy.html
+docs/
+tcpclient.so
+tcpclient.dylib
+tcpclient.dll
+tcpclient.a
+tcpclient.lib
+tcpclient-test-*
+*.exe
+*.o
+*.obj
+*.lst

@@ -8,8 +8,8 @@ import vibemodbus.exception;
 public import vibemodbus.protocol.common;
 public import vibemodbus.protocol.tcp;
 
-alias Request = TCPAdu;
-alias Response = TCPAdu;
+alias Request = TCPApplicationDataUnit;
+alias Response = TCPApplicationDataUnit;
 
 
 // Write MBAP Header fields.
@@ -34,13 +34,13 @@ unittest
     assert(buffer == [0x0, 0x11, 0x0, 0x0, 0x0, 0x3, 0x1]);
 }
 
-void encodePDU(ubyte[] buffer, Pdu pdu)
+void encodePDU(ubyte[] buffer, ProtocolDataUnit pdu)
 {
     buffer[0] = pdu.functionCode;
     buffer[1 .. $] = pdu.data;
 }
 
-void encodeADU(ubyte[] buffer, TCPAdu adu)
+void encodeADU(ubyte[] buffer, TCPApplicationDataUnit adu)
 {
     encodeMBAPHeader(buffer, adu.header);
     encodePDU(buffer[MBAP_HEADER_LEN .. $], adu.pdu);
@@ -48,8 +48,9 @@ void encodeADU(ubyte[] buffer, TCPAdu adu)
 
 unittest
 {
-    TCPAdu adu = TCPAdu(MBAPHeader(0x11, PROTOCOL_ID, 4, 1),
-                        Pdu(0x1, [0x0, 0x0]));
+    auto adu = TCPApplicationDataUnit(
+        MBAPHeader(0x11, PROTOCOL_ID, 4, 1),
+        ProtocolDataUnit(FunctionCode.ReadCoils, [0x0, 0x0]));
     ubyte[] buffer = new ubyte[MBAP_HEADER_LEN + adu.header.length - 1];
     encodeADU(buffer, adu);
     assert(buffer == [0x0, 0x11, 0x0, 0x0, 0x0, 0x4, 0x1, // MBAP Header
@@ -73,13 +74,9 @@ void decodeMBAPHeader(ref ubyte[] data, MBAPHeader* header)
     header.unitId = unitId;
 }
 
-void decodePDU(ubyte[] data, Pdu* pdu)
+void decodePDU(ubyte[] data, ProtocolDataUnit* pdu)
 {
     ubyte functionCode = data[0];
-    enforce!InvalidFunctionCode(functionCode < 0x80, "Invalid Function Code.");
-
-    size_t index = 0;
-    ubyte[] buffer;
 
     switch (functionCode) {
     case FunctionCode.ReadCoils:
@@ -91,19 +88,30 @@ void decodePDU(ubyte[] data, Pdu* pdu)
     case FunctionCode.WriteMultipleCoils:
     case FunctionCode.WriteMultipleRegisters:
     case FunctionCode.ReadWriteMultipleRegisters:
+
+        // Error Code
+    case FunctionCode.ErrorReadCoils:
+    case FunctionCode.ErrorReadDiscreteInputs:
+    case FunctionCode.ErrorReadInputRegisters:
+    case FunctionCode.ErrorReadHoldingRegisters:
+    case FunctionCode.ErrorWriteSingleCoil:
+    case FunctionCode.ErrorWriteSingleRegister:
+    case FunctionCode.ErrorWriteMultipleCoils:
+    case FunctionCode.ErrorWriteMultipleRegisters:
+    case FunctionCode.ErrorReadWriteMultipleRegisters:
         break;
     default:
         throw new UnsupportedFunctionCode("Unsupported Function Code.");
     }
 
-    pdu.functionCode = functionCode;
+    pdu.functionCode = cast(FunctionCode) functionCode;
     pdu.data = data[1..$];
 }
 
 unittest
 {
     {
-        Pdu pdu;
+        ProtocolDataUnit pdu;
         ubyte[] data = [0x1, 0x0, 0x0];
         decodePDU(data, &pdu);
         assert(pdu.functionCode == FunctionCode.ReadCoils);
@@ -113,13 +121,13 @@ unittest
     // Invalid FunctionCode
     {
         import std.exception : assertThrown;
-        Pdu pdu;
+        ProtocolDataUnit pdu;
         ubyte[] data = [0x0, 0x0, 0x0];
         assertThrown(decodePDU(data, &pdu));
     }
 }
 
-void decodeADU(ubyte[] buffer, TCPAdu* adu)
+void decodeADU(ubyte[] buffer, TCPApplicationDataUnit* adu)
 {
     decodeMBAPHeader(buffer, &adu.header);
     decodePDU(buffer[0 .. (adu.header.length - 1)], &adu.pdu);
@@ -127,7 +135,7 @@ void decodeADU(ubyte[] buffer, TCPAdu* adu)
 
 unittest
 {
-    TCPAdu adu;
+    TCPApplicationDataUnit adu;
     ubyte[] buffer = [0x0, 0x11,  // transaction id
                       0x0, 0x0,   // protocol id
                       0x0, 0x6,   // length (unit id + length(pdu))

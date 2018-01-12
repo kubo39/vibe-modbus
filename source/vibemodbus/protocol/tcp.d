@@ -1,5 +1,7 @@
 module vibemodbus.protocol.tcp;
 
+public import vibemodbus.protocol.common;
+
 immutable ushort PROTOCOL_ID = 0x0;
 immutable size_t MBAP_HEADER_LEN = 7;
 immutable size_t MAX_TCP_APU_SIZE = 260;
@@ -23,14 +25,20 @@ struct MBAPHeader
     ubyte unitId;
 }
 
-struct Pdu
+struct ProtocolDataUnit
 {
-    ubyte functionCode;
+    FunctionCode functionCode;
     ubyte[] data;
 }
 
-struct TCPAdu
+struct ModbusError
+{
+    FunctionCode functionCode;
+    ExceptionCode exceptionCode;
+}
+
+struct TCPApplicationDataUnit
 {
     MBAPHeader header;
-    Pdu pdu;
+    ProtocolDataUnit pdu;
 }

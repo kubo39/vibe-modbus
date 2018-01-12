@@ -63,7 +63,7 @@ struct Client
         assert(index == 4);
         auto length = cast(ushort)(1 + 1 + data.length);
         auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
-                           Pdu(FunctionCode.ReadCoils, data));
+                           ProtocolDataUnit(FunctionCode.ReadCoils, data));
         return request(req);
     }
 
@@ -77,7 +77,7 @@ struct Client
         assert(index == 4);
         auto length = cast(short)(1 + 1 + data.length);
         auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
-                           Pdu(FunctionCode.ReadDiscreteInputs, data));
+                           ProtocolDataUnit(FunctionCode.ReadDiscreteInputs, data));
         return request(req);
     }
 
@@ -91,7 +91,7 @@ struct Client
         assert(index == 4);
         auto length = cast(short)(1 + 1 + data.length);
         auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
-                           Pdu(FunctionCode.ReadHoldingRegisters, data));
+                           ProtocolDataUnit(FunctionCode.ReadHoldingRegisters, data));
         return request(req);
     }
 
@@ -105,7 +105,7 @@ struct Client
         assert(index == 4);
         auto length = cast(short)(1 + 1 + data.length);
         auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
-                           Pdu(FunctionCode.ReadInputRegisters, data));
+                           ProtocolDataUnit(FunctionCode.ReadInputRegisters, data));
         return request(req);
     }
 
@@ -119,7 +119,7 @@ struct Client
         assert(index == 4);
         auto length = cast(short)(1 + 1 + data.length);
         auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
-                           Pdu(FunctionCode.WriteSingleCoil, data));
+                           ProtocolDataUnit(FunctionCode.WriteSingleCoil, data));
         return request(req);
     }
 
@@ -133,7 +133,7 @@ struct Client
         assert(index == 4);
         auto length = cast(short)(1 + 1 + data.length);
         auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
-                           Pdu(FunctionCode.WriteSingleRegister, data));
+                           ProtocolDataUnit(FunctionCode.WriteSingleRegister, data));
         return request(req);
     }
 
@@ -150,7 +150,7 @@ struct Client
         data ~= outputValue;
         auto length = cast(short)(1 + 1 + data.length);
         auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
-                           Pdu(FunctionCode.WriteMultipleCoils, data));
+                           ProtocolDataUnit(FunctionCode.WriteMultipleCoils, data));
         return request(req);
     }
 
@@ -167,7 +167,7 @@ struct Client
         data ~= registersValue;
         auto length = cast(short)(1 + 1 + data.length);
         auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
-                           Pdu(FunctionCode.WriteMultipleRegisters, data));
+                           ProtocolDataUnit(FunctionCode.WriteMultipleRegisters, data));
         return request(req);
     }
 
@@ -189,7 +189,7 @@ struct Client
         data ~= registersValue;
         auto length = cast(short)(1 + 1 + data.length);
         auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
-                           Pdu(FunctionCode.ReadWriteMultipleRegisters, data));
+                           ProtocolDataUnit(FunctionCode.ReadWriteMultipleRegisters, data));
         return request(req);
     }
 }

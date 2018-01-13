@@ -11,12 +11,6 @@ public import vibemodbus.protocol.common;
 public import vibemodbus.protocol.tcp;
 public import vibemodbus.tcp.common;
 
-Request decodeRequest(ref ubyte[] buffer)
-{
-    Request req;
-    decodeADU(buffer, &req);
-    return req;
-}
 
 void encodeResponse(TCPConnection conn, Response res)
 {

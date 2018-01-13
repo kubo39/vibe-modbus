@@ -28,13 +28,13 @@ struct MBAPHeader
 
 struct ProtocolDataUnit
 {
-    FunctionCode functionCode;
+    ubyte functionCode;
     ubyte[] data;
 }
 
 struct ModbusError
 {
-    FunctionCode functionCode;
+    ubyte functionCode;
     ExceptionCode exceptionCode;
 }
 

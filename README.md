@@ -1,4 +1,4 @@
-# vibe-modbus
+# vibe-modbus [![Build Status](https://secure.travis-ci.org/kubo39/vibe-modbus.svg?branch=master)](http://travis-ci.org/kubo39/vibe-modbus)
 
 ** **This is very much an incomplete and work-in-progress** **
 

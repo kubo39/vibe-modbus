@@ -31,6 +31,7 @@ TCPListener listenTCP(ushort port, void delegate(const Request*, Response*) del,
 {
     return vibe.core.net.listenTCP(port, (TCPConnection conn) {
             Request req;
+            Response res;
 
             ubyte[] buffer1 = new ubyte[MBAP_HEADER_LEN];
             conn.read(buffer1);
@@ -40,15 +41,18 @@ TCPListener listenTCP(ushort port, void delegate(const Request*, Response*) del,
             conn.read(buffer2);
             decodePDU(buffer2, &req.pdu);
 
-            // stream data size > MAX_TCP_APU_SIZE or data-length is longer than
-            // length field.
-
-            // if (!conn.empty)
-            //     throw new TooSmallADU("Too small ADU.");
-
-            Response res;
             res.header = req.header;
             res.pdu.functionCode = req.pdu.functionCode;
+
+            if (req.pdu.functionCode == 0x0 || req.pdu.functionCode >= 0x80)
+            {
+                res.pdu.data = [ ExceptionCode.IllegalFunctionCode ];
+                // length = bytes of Error(Error Code and Exception Code) + unit ID.
+                //           1 + 1 + 1 = 3 bytes.
+                res.header.length = 3;
+                encodeResponse(conn, res);
+                return;
+            }
 
             if (del !is null) del(&req, &res);
 

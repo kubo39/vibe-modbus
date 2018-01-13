@@ -109,7 +109,7 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
             decodeMBAPHeader(buffer1, &header);
             ushort length = header.length;
             ubyte[] buffer2 = new ubyte[header.length - 1];
-                conn.read(buffer2);
+            conn.read(buffer2);
             ubyte functionCode = buffer2[0];
 
             switch (functionCode)

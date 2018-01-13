@@ -11,12 +11,6 @@ public import vibemodbus.protocol.common;
 public import vibemodbus.protocol.tcp;
 public import vibemodbus.tcp.common;
 
-Request decodeRequest(ref ubyte[] buffer)
-{
-    Request req;
-    decodeADU(buffer, &req);
-    return req;
-}
 
 void encodeResponse(TCPConnection conn, Response res)
 {
@@ -26,33 +20,252 @@ void encodeResponse(TCPConnection conn, Response res)
     conn.finalize();
 }
 
-TCPListener listenTCP(ushort port, void delegate(const Request*, Response*) del,
-                      string address)
+
+struct ReadCoilsRequest
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ushort startingAddress;
+    ushort quantityOfCoils;
+}
+
+struct ReadDiscreteInputsRequest
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ushort startingAddress;
+    ushort quantityOfInputs;
+}
+
+struct ReadHoldingRegistersRequest
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ushort startingAddress;
+    ushort quantityOfRegisters;
+}
+
+struct ReadInputRegistersRequest
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ushort startingAddress;
+    ushort quantityOfInputRegisters;
+}
+
+struct WriteSingleCoilRequest
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ushort outputAddress;
+    ushort outputValue;
+}
+
+struct WriteSingleRegisterRequest
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ushort registerAddress;
+    ushort registerValue;
+}
+
+struct WriteMultipleCoilsRequest
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ushort startingAddress;
+    ushort quantityOfAddress;
+    ubyte byteCount;
+    ushort[] registersValue;
+}
+
+interface ModbusRequestHandler
+{
+    void onReadCoils(const ReadCoilsRequest* req, Response* res);
+
+    void onReadDiscreteInputs(const ReadDiscreteInputsRequest* req, Response* res);
+
+    void onReadHoldingRegisters(const ReadHoldingRegistersRequest* req, Response* res);
+
+    void onReadInputRegisters(const ReadInputRegistersRequest* req, Response* res);
+
+    void onWriteSingleCoil(const WriteSingleCoilRequest* req, Response* res);
+
+    void onWriteSingleRegister(const WriteSingleRegisterRequest* req, Response* res);
+
+    void onWriteMultipleCoils(const WriteMultipleCoilsRequest* req, Response* res);
+}
+
+
+TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
 {
     return vibe.core.net.listenTCP(port, (TCPConnection conn) {
-            Request req;
+            MBAPHeader header;
             Response res;
 
             ubyte[] buffer1 = new ubyte[MBAP_HEADER_LEN];
             conn.read(buffer1);
 
-            decodeMBAPHeader(buffer1, &req.header);
-            ubyte[] buffer2 = new ubyte[req.header.length - 1];
+            decodeMBAPHeader(buffer1, &header);
+            ushort length = header.length;
+            ubyte[] buffer2 = new ubyte[header.length - 1];
             conn.read(buffer2);
-            decodePDU(buffer2, &req.pdu);
 
-            res.header = req.header;
-            res.pdu.functionCode = req.pdu.functionCode;
+            ubyte functionCode = buffer2.read!(ubyte, Endian.bigEndian);
 
-            switch (req.pdu.functionCode)
+            switch (functionCode)
             {
             case FunctionCode.ReadCoils:
+                ReadCoilsRequest req;
+                req.header = header;
+                req.functionCode = functionCode;
+                req.startingAddress = buffer2.read!(ushort, Endian.bigEndian);
+                req.quantityOfCoils = buffer2.read!(ushort, Endian.bigEndian);
+                res.header = req.header;
+
+                if (req.quantityOfCoils == 0 || req.quantityOfCoils > 0x7D0)
+                {
+                    res.pdu.functionCode = FunctionCode.ErrorReadCoils;
+                    res.pdu.data = [ ExceptionCode.IllegalDataValue ];
+                    // length = bytes of Error(Error Code and Exception Code) + unit ID.
+                    //           1 + 1 + 1 = 3 bytes.
+                    res.header.length = 3;
+                    encodeResponse(conn, res);
+                    return;
+                }
+
+                res.pdu.functionCode = req.functionCode;
+                handler.onReadCoils(&req, &res);
+                break;
             case FunctionCode.ReadDiscreteInputs:
-            case FunctionCode.ReadInputRegisters:
+                ReadDiscreteInputsRequest req;
+                req.header = header;
+                req.functionCode = functionCode;
+                req.startingAddress = buffer2.read!(ushort, Endian.bigEndian);
+                req.quantityOfInputs = buffer2.read!(ushort, Endian.bigEndian);
+                res.header = req.header;
+
+                if (req.quantityOfInputs == 0 || req.quantityOfInputs > 0x7D0)
+                {
+                    res.pdu.functionCode = FunctionCode.ErrorReadDiscreteInputs;
+                    res.pdu.data = [ ExceptionCode.IllegalDataValue ];
+                    // length = bytes of Error(Error Code and Exception Code) + unit ID.
+                    //           1 + 1 + 1 = 3 bytes.
+                    res.header.length = 3;
+                    encodeResponse(conn, res);
+                    return;
+                }
+
+                res.pdu.functionCode = req.functionCode;
+                handler.onReadDiscreteInputs(&req, &res);
+                break;
             case FunctionCode.ReadHoldingRegisters:
+                ReadHoldingRegistersRequest req;
+                req.header = header;
+                req.functionCode = functionCode;
+                req.startingAddress = buffer2.read!(ushort, Endian.bigEndian);
+                req.quantityOfRegisters = buffer2.read!(ushort, Endian.bigEndian);
+                res.header = req.header;
+
+                if (req.quantityOfRegisters == 0 || req.quantityOfRegisters > 0x7D)
+                {
+                    res.pdu.functionCode = FunctionCode.ErrorReadHoldingRegisters;
+                    res.pdu.data = [ ExceptionCode.IllegalDataValue ];
+                    // length = bytes of Error(Error Code and Exception Code) + unit ID.
+                    //           1 + 1 + 1 = 3 bytes.
+                    res.header.length = 3;
+                    encodeResponse(conn, res);
+                    return;
+                }
+
+                res.pdu.functionCode = req.functionCode;
+                handler.onReadHoldingRegisters(&req, &res);
+                break;
+            case FunctionCode.ReadInputRegisters:
+                ReadInputRegistersRequest req;
+                req.header = header;
+                req.functionCode = functionCode;
+                req.startingAddress = buffer2.read!(ushort, Endian.bigEndian);
+                req.quantityOfInputRegisters = buffer2.read!(ushort, Endian.bigEndian);
+                res.header = req.header;
+
+                if (req.quantityOfInputRegisters == 0 || req.quantityOfInputRegisters > 0x7D)
+                {
+                    res.pdu.functionCode = FunctionCode.ErrorReadInputRegisters;
+                    res.pdu.data = [ ExceptionCode.IllegalDataValue ];
+                    // length = bytes of Error(Error Code and Exception Code) + unit ID.
+                    //           1 + 1 + 1 = 3 bytes.
+                    res.header.length = 3;
+                    encodeResponse(conn, res);
+                    return;
+                }
+
+                res.pdu.functionCode = req.functionCode;
+                handler.onReadInputRegisters(&req, &res);
+                break;
             case FunctionCode.WriteSingleCoil:
+                WriteSingleCoilRequest req;
+                req.header = header;
+                req.functionCode = functionCode;
+                req.outputAddress = buffer2.read!(ushort, Endian.bigEndian);
+                req.outputValue = buffer2.read!(ushort, Endian.bigEndian);
+                res.header = req.header;
+
+                if (req.outputValue == 0 || req.outputValue > 0xFF00)
+                {
+                    res.pdu.functionCode = FunctionCode.ErrorWriteSingleCoil;
+                    res.pdu.data = [ ExceptionCode.IllegalDataValue ];
+                    // length = bytes of Error(Error Code and Exception Code) + unit ID.
+                    //           1 + 1 + 1 = 3 bytes.
+                    res.header.length = 3;
+                    encodeResponse(conn, res);
+                    return;
+                }
+
+                res.pdu.functionCode = req.functionCode;
+                handler.onWriteSingleCoil(&req, &res);
+                break;
             case FunctionCode.WriteSingleRegister:
+                WriteSingleRegisterRequest req;
+                req.header = header;
+                req.functionCode = functionCode;
+                req.registerAddress = buffer2.read!(ushort, Endian.bigEndian);
+                req.registerValue = buffer2.read!(ushort, Endian.bigEndian);
+                res.header = req.header;
+                res.pdu.functionCode = req.functionCode;
+                handler.onWriteSingleRegister(&req, &res);
+                break;
             case FunctionCode.WriteMultipleCoils:
+                WriteMultipleCoilsRequest req;
+                req.header = header;
+                req.functionCode = functionCode;
+                req.startingAddress = buffer2.read!(ushort, Endian.bigEndian);
+                req.quantityOfAddress = buffer2.read!(ushort, Endian.bigEndian);
+                req.byteCount = buffer2.read!(ubyte, Endian.bigEndian);
+
+                ushort[] registersValue = new ushort[(header.length - 7) / 2];
+                while (buffer2.length)
+                {
+                    registersValue ~= buffer2.read!(ushort, Endian.bigEndian);
+                }
+                req.registersValue = registersValue;
+
+                res.header = req.header;
+
+                if (req.quantityOfAddress == 0 || req.quantityOfAddress > 0x7B0)
+                {
+                    res.pdu.functionCode = FunctionCode.ErrorWriteMultipleCoils;
+                    res.pdu.data = [ ExceptionCode.IllegalDataValue ];
+                    // length = bytes of Error(Error Code and Exception Code) + unit ID.
+                    //           1 + 1 + 1 = 3 bytes.
+                    res.header.length = 3;
+                    encodeResponse(conn, res);
+                    return;
+                }
+
+                res.pdu.functionCode = req.functionCode;
+                handler.onWriteMultipleCoils(&req, &res);
+                break;
             case FunctionCode.WriteMultipleRegisters:
             case FunctionCode.ReadWriteMultipleRegisters:
 
@@ -70,8 +283,6 @@ TCPListener listenTCP(ushort port, void delegate(const Request*, Response*) del,
                 encodeResponse(conn, res);
                 return;
             }
-
-            if (del !is null) del(&req, &res);
 
             // length = bytes of PDU(Function Code and Data) + unit ID.
             res.header.length = cast(ushort)(res.pdu.data.length + 1 + 1);

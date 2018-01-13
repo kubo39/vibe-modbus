@@ -14,7 +14,8 @@ enum ExceptionCode
     ServerFailure = 0x4,
     Acknowledge = 0x5,
     ServerBusy = 0x6,
-    GatewayProblem = 0xA,
+    GatewayPathUnavailable = 0xA,
+    GatewayTargetDevice = 0xB,
 }
 
 struct MBAPHeader

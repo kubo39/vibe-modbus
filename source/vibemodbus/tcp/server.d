@@ -34,8 +34,6 @@ TCPListener listenTCP(ushort port, void delegate(const Request*, Response*) del,
 
             ubyte[] buffer1 = new ubyte[MBAP_HEADER_LEN];
             conn.read(buffer1);
-            enforce!TooSmallADU(buffer1.length >= MBAP_HEADER_LEN, "Too small ADU length.");
-
 
             decodeMBAPHeader(buffer1, &req.header);
             ubyte[] buffer2 = new ubyte[req.header.length - 1];

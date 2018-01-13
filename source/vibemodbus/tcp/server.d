@@ -34,7 +34,7 @@ struct ReadDiscreteInputsRequest
     MBAPHeader header;
     ubyte functionCode;
     ushort startingAddress;
-    ushort quantityOfInput;
+    ushort quantityOfInputs;
 }
 
 struct ReadHoldingRegistersRequest
@@ -122,6 +122,18 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
                 req.startingAddress = buffer2.read!(ushort, Endian.bigEndian);
                 req.quantityOfCoils = buffer2.read!(ushort, Endian.bigEndian);
                 res.header = req.header;
+
+                if (req.quantityOfCoils == 0 || req.quantityOfCoils > 0x7D0)
+                {
+                    res.pdu.functionCode = FunctionCode.ErrorReadCoils;
+                    res.pdu.data = [ ExceptionCode.IllegalDataValue ];
+                    // length = bytes of Error(Error Code and Exception Code) + unit ID.
+                    //           1 + 1 + 1 = 3 bytes.
+                    res.header.length = 3;
+                    encodeResponse(conn, res);
+                    return;
+                }
+
                 res.pdu.functionCode = req.functionCode;
                 handler.onReadCoils(&req, &res);
                 break;
@@ -130,20 +142,22 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
                 req.header = header;
                 req.functionCode = functionCode;
                 req.startingAddress = buffer2.read!(ushort, Endian.bigEndian);
-                req.quantityOfInput = buffer2.read!(ushort, Endian.bigEndian);
+                req.quantityOfInputs = buffer2.read!(ushort, Endian.bigEndian);
                 res.header = req.header;
+
+                if (req.quantityOfInputs == 0 || req.quantityOfInputs > 0x7D0)
+                {
+                    res.pdu.functionCode = FunctionCode.ErrorReadDiscreteInputs;
+                    res.pdu.data = [ ExceptionCode.IllegalDataValue ];
+                    // length = bytes of Error(Error Code and Exception Code) + unit ID.
+                    //           1 + 1 + 1 = 3 bytes.
+                    res.header.length = 3;
+                    encodeResponse(conn, res);
+                    return;
+                }
+
                 res.pdu.functionCode = req.functionCode;
                 handler.onReadDiscreteInputs(&req, &res);
-                break;
-            case FunctionCode.ReadInputRegisters:
-                ReadInputRegistersRequest req;
-                req.header = header;
-                req.functionCode = functionCode;
-                req.startingAddress = buffer2.read!(ushort, Endian.bigEndian);
-                req.quantityOfInputRegisters = buffer2.read!(ushort, Endian.bigEndian);
-                res.header = req.header;
-                res.pdu.functionCode = req.functionCode;
-                handler.onReadInputRegisters(&req, &res);
                 break;
             case FunctionCode.ReadHoldingRegisters:
                 ReadHoldingRegistersRequest req;
@@ -152,8 +166,42 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
                 req.startingAddress = buffer2.read!(ushort, Endian.bigEndian);
                 req.quantityOfRegisters = buffer2.read!(ushort, Endian.bigEndian);
                 res.header = req.header;
+
+                if (req.quantityOfRegisters == 0 || req.quantityOfRegisters > 0x7D)
+                {
+                    res.pdu.functionCode = FunctionCode.ErrorReadHoldingRegisters;
+                    res.pdu.data = [ ExceptionCode.IllegalDataValue ];
+                    // length = bytes of Error(Error Code and Exception Code) + unit ID.
+                    //           1 + 1 + 1 = 3 bytes.
+                    res.header.length = 3;
+                    encodeResponse(conn, res);
+                    return;
+                }
+
                 res.pdu.functionCode = req.functionCode;
                 handler.onReadHoldingRegisters(&req, &res);
+                break;
+            case FunctionCode.ReadInputRegisters:
+                ReadInputRegistersRequest req;
+                req.header = header;
+                req.functionCode = functionCode;
+                req.startingAddress = buffer2.read!(ushort, Endian.bigEndian);
+                req.quantityOfInputRegisters = buffer2.read!(ushort, Endian.bigEndian);
+                res.header = req.header;
+
+                if (req.quantityOfInputRegisters == 0 || req.quantityOfInputRegisters > 0x7D)
+                {
+                    res.pdu.functionCode = FunctionCode.ErrorReadInputRegisters;
+                    res.pdu.data = [ ExceptionCode.IllegalDataValue ];
+                    // length = bytes of Error(Error Code and Exception Code) + unit ID.
+                    //           1 + 1 + 1 = 3 bytes.
+                    res.header.length = 3;
+                    encodeResponse(conn, res);
+                    return;
+                }
+
+                res.pdu.functionCode = req.functionCode;
+                handler.onReadInputRegisters(&req, &res);
                 break;
             case FunctionCode.WriteSingleCoil:
                 WriteSingleCoilRequest req;
@@ -162,6 +210,18 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
                 req.outputAddress = buffer2.read!(ushort, Endian.bigEndian);
                 req.outputValue = buffer2.read!(ushort, Endian.bigEndian);
                 res.header = req.header;
+
+                if (req.outputValue == 0 || req.outputValue > 0xFF00)
+                {
+                    res.pdu.functionCode = FunctionCode.ErrorWriteSingleCoil;
+                    res.pdu.data = [ ExceptionCode.IllegalDataValue ];
+                    // length = bytes of Error(Error Code and Exception Code) + unit ID.
+                    //           1 + 1 + 1 = 3 bytes.
+                    res.header.length = 3;
+                    encodeResponse(conn, res);
+                    return;
+                }
+
                 res.pdu.functionCode = req.functionCode;
                 handler.onWriteSingleCoil(&req, &res);
                 break;
@@ -191,6 +251,18 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
                 req.registersValue = registersValue;
 
                 res.header = req.header;
+
+                if (req.quantityOfAddress == 0 || req.quantityOfAddress > 0x7B0)
+                {
+                    res.pdu.functionCode = FunctionCode.ErrorWriteMultipleCoils;
+                    res.pdu.data = [ ExceptionCode.IllegalDataValue ];
+                    // length = bytes of Error(Error Code and Exception Code) + unit ID.
+                    //           1 + 1 + 1 = 3 bytes.
+                    res.header.length = 3;
+                    encodeResponse(conn, res);
+                    return;
+                }
+
                 res.pdu.functionCode = req.functionCode;
                 handler.onWriteMultipleCoils(&req, &res);
                 break;

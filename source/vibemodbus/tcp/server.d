@@ -44,8 +44,25 @@ TCPListener listenTCP(ushort port, void delegate(const Request*, Response*) del,
             res.header = req.header;
             res.pdu.functionCode = req.pdu.functionCode;
 
-            if (req.pdu.functionCode == 0x0 || req.pdu.functionCode >= 0x80)
+            switch (req.pdu.functionCode)
             {
+            case FunctionCode.ReadCoils:
+            case FunctionCode.ReadDiscreteInputs:
+            case FunctionCode.ReadInputRegisters:
+            case FunctionCode.ReadHoldingRegisters:
+            case FunctionCode.WriteSingleCoil:
+            case FunctionCode.WriteSingleRegister:
+            case FunctionCode.WriteMultipleCoils:
+            case FunctionCode.WriteMultipleRegisters:
+            case FunctionCode.ReadWriteMultipleRegisters:
+
+                 // Unsupported Function Code.
+            case 0x7: .. case 0xE:
+            case 0x11: .. case 0x16:
+            case 0x18: .. case 0x79:
+                break;
+
+            default: // == 0x0 or >= 0x80
                 res.pdu.data = [ ExceptionCode.IllegalFunctionCode ];
                 // length = bytes of Error(Error Code and Exception Code) + unit ID.
                 //           1 + 1 + 1 = 3 bytes.

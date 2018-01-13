@@ -110,14 +110,15 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
             ushort length = header.length;
             ubyte[] buffer2 = new ubyte[header.length - 1];
             conn.read(buffer2);
-            ubyte functionCode = buffer2[0];
+
+            ubyte functionCode = buffer2.read!(ubyte, Endian.bigEndian);
 
             switch (functionCode)
             {
             case FunctionCode.ReadCoils:
                 ReadCoilsRequest req;
                 req.header = header;
-                req.functionCode = buffer2.read!(ubyte, Endian.bigEndian);
+                req.functionCode = functionCode;
                 req.startingAddress = buffer2.read!(ushort, Endian.bigEndian);
                 req.quantityOfCoils = buffer2.read!(ushort, Endian.bigEndian);
                 res.header = req.header;
@@ -127,7 +128,7 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
             case FunctionCode.ReadDiscreteInputs:
                 ReadDiscreteInputsRequest req;
                 req.header = header;
-                req.functionCode = buffer2.read!(ubyte, Endian.bigEndian);
+                req.functionCode = functionCode;
                 req.startingAddress = buffer2.read!(ushort, Endian.bigEndian);
                 req.quantityOfInput = buffer2.read!(ushort, Endian.bigEndian);
                 res.header = req.header;
@@ -137,7 +138,7 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
             case FunctionCode.ReadInputRegisters:
                 ReadInputRegistersRequest req;
                 req.header = header;
-                req.functionCode = buffer2.read!(ubyte, Endian.bigEndian);
+                req.functionCode = functionCode;
                 req.startingAddress = buffer2.read!(ushort, Endian.bigEndian);
                 req.quantityOfInputRegisters = buffer2.read!(ushort, Endian.bigEndian);
                 res.header = req.header;
@@ -147,7 +148,7 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
             case FunctionCode.ReadHoldingRegisters:
                 ReadHoldingRegistersRequest req;
                 req.header = header;
-                req.functionCode = buffer2.read!(ubyte, Endian.bigEndian);
+                req.functionCode = functionCode;
                 req.startingAddress = buffer2.read!(ushort, Endian.bigEndian);
                 req.quantityOfRegisters = buffer2.read!(ushort, Endian.bigEndian);
                 res.header = req.header;
@@ -157,7 +158,7 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
             case FunctionCode.WriteSingleCoil:
                 WriteSingleCoilRequest req;
                 req.header = header;
-                req.functionCode = buffer2.read!(ubyte, Endian.bigEndian);
+                req.functionCode = functionCode;
                 req.outputAddress = buffer2.read!(ushort, Endian.bigEndian);
                 req.outputValue = buffer2.read!(ushort, Endian.bigEndian);
                 res.header = req.header;
@@ -167,7 +168,7 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
             case FunctionCode.WriteSingleRegister:
                 WriteSingleRegisterRequest req;
                 req.header = header;
-                req.functionCode = buffer2.read!(ubyte, Endian.bigEndian);
+                req.functionCode = functionCode;
                 req.registerAddress = buffer2.read!(ushort, Endian.bigEndian);
                 req.registerValue = buffer2.read!(ushort, Endian.bigEndian);
                 res.header = req.header;
@@ -177,7 +178,7 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
             case FunctionCode.WriteMultipleCoils:
                 WriteMultipleCoilsRequest req;
                 req.header = header;
-                req.functionCode = buffer2.read!(ubyte, Endian.bigEndian);
+                req.functionCode = functionCode;
                 req.startingAddress = buffer2.read!(ushort, Endian.bigEndian);
                 req.quantityOfAddress = buffer2.read!(ushort, Endian.bigEndian);
                 req.byteCount = buffer2.read!(ubyte, Endian.bigEndian);

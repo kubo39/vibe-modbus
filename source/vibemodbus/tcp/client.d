@@ -146,16 +146,15 @@ struct Client
         assert(index == 2);
         data.write!(ushort, Endian.bigEndian)(quantity, &index);
         assert(index == 4);
-        data[5] = cast(ubyte)(outputsValue.length / 8 + 1);
-        data[6 .. $] = outputsValue;
+        data[4] = cast(ubyte)(outputsValue.length / 8 + 1);
+        data[5 .. $] = outputsValue;
         auto length = cast(short)(1 + 1 + data.length);
         auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
                            ProtocolDataUnit(FunctionCode.WriteMultipleCoils, data));
         return request(req);
     }
 
-    Response writeMultipleRegisters(ushort startingAddress, ushort quantity,
-                                    ubyte byteCount, ubyte[] registersValue)
+    Response writeMultipleRegisters(ushort startingAddress, ushort quantity, ubyte[] registersValue)
     {
         ubyte[] data = new ubyte[5 + registersValue.length];
         size_t index = 0;
@@ -163,8 +162,8 @@ struct Client
         assert(index == 2);
         data.write!(ushort, Endian.bigEndian)(quantity, &index);
         assert(index == 4);
-        data ~= byteCount;
-        data ~= registersValue;
+        data[4] = cast(ubyte)(registersValue.length / 8 + 1);
+        data[5 .. $] = registersValue;
         auto length = cast(short)(1 + 1 + data.length);
         auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
                            ProtocolDataUnit(FunctionCode.WriteMultipleRegisters, data));
@@ -173,7 +172,7 @@ struct Client
 
     Response readWriteMultipleRegisters(ushort readStartingAddress, ushort readQuantity,
                                         ushort writeStartingAddress, ushort writeQuantity,
-                                        ubyte byteCount, ubyte[] registersValue)
+                                        ubyte[] registersValue)
     {
         ubyte[] data = new ubyte[9 + registersValue.length];
         size_t index = 0;
@@ -185,8 +184,8 @@ struct Client
         assert(index == 6);
         data.write!(ushort, Endian.bigEndian)(writeQuantity, &index);
         assert(index == 8);
-        data ~= byteCount;
-        data ~= registersValue;
+        data[8] = cast(ubyte)(registersValue.length / 8 + 1);
+        data[9 .. $] = registersValue;
         auto length = cast(short)(1 + 1 + data.length);
         auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
                            ProtocolDataUnit(FunctionCode.ReadWriteMultipleRegisters, data));

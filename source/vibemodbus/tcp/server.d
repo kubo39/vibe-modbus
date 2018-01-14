@@ -12,12 +12,23 @@ public import vibemodbus.protocol.tcp;
 public import vibemodbus.tcp.common;
 
 
-void encodeResponse(TCPConnection conn, Response res)
+void encodeResponse(TCPConnection conn, Response* res)
 {
     ubyte[] buffer = new ubyte[MBAP_HEADER_LEN + res.header.length - 1];
-    encodeADU(buffer, res);
+    encodeADU(buffer, *res);
     conn.write(buffer);
     conn.finalize();
+}
+
+void encodeErrorResponse(TCPConnection conn, Response* res,
+                         ubyte functionCode, ubyte exceptionCode)
+{
+    res.pdu.functionCode = functionCode;
+    res.pdu.data = [ exceptionCode ];
+    // length = bytes of Error(Error Code and Exception Code) + unit ID.
+    //           1 + 1 + 1 = 3 bytes.
+    res.header.length = 3;
+    encodeResponse(conn, res);
 }
 
 
@@ -125,12 +136,7 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
 
                 if (req.quantityOfCoils == 0 || req.quantityOfCoils > 0x7D0)
                 {
-                    res.pdu.functionCode = FunctionCode.ErrorReadCoils;
-                    res.pdu.data = [ ExceptionCode.IllegalDataValue ];
-                    // length = bytes of Error(Error Code and Exception Code) + unit ID.
-                    //           1 + 1 + 1 = 3 bytes.
-                    res.header.length = 3;
-                    encodeResponse(conn, res);
+                    encodeErrorResponse(conn, &res, functionCode, ExceptionCode.IllegalDataValue);
                     return;
                 }
 
@@ -147,12 +153,7 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
 
                 if (req.quantityOfInputs == 0 || req.quantityOfInputs > 0x7D0)
                 {
-                    res.pdu.functionCode = FunctionCode.ErrorReadDiscreteInputs;
-                    res.pdu.data = [ ExceptionCode.IllegalDataValue ];
-                    // length = bytes of Error(Error Code and Exception Code) + unit ID.
-                    //           1 + 1 + 1 = 3 bytes.
-                    res.header.length = 3;
-                    encodeResponse(conn, res);
+                    encodeErrorResponse(conn, &res, functionCode, ExceptionCode.IllegalDataValue);
                     return;
                 }
 
@@ -169,12 +170,7 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
 
                 if (req.quantityOfRegisters == 0 || req.quantityOfRegisters > 0x7D)
                 {
-                    res.pdu.functionCode = FunctionCode.ErrorReadHoldingRegisters;
-                    res.pdu.data = [ ExceptionCode.IllegalDataValue ];
-                    // length = bytes of Error(Error Code and Exception Code) + unit ID.
-                    //           1 + 1 + 1 = 3 bytes.
-                    res.header.length = 3;
-                    encodeResponse(conn, res);
+                    encodeErrorResponse(conn, &res, functionCode, ExceptionCode.IllegalDataValue);
                     return;
                 }
 
@@ -191,12 +187,7 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
 
                 if (req.quantityOfInputRegisters == 0 || req.quantityOfInputRegisters > 0x7D)
                 {
-                    res.pdu.functionCode = FunctionCode.ErrorReadInputRegisters;
-                    res.pdu.data = [ ExceptionCode.IllegalDataValue ];
-                    // length = bytes of Error(Error Code and Exception Code) + unit ID.
-                    //           1 + 1 + 1 = 3 bytes.
-                    res.header.length = 3;
-                    encodeResponse(conn, res);
+                    encodeErrorResponse(conn, &res, functionCode, ExceptionCode.IllegalDataValue);
                     return;
                 }
 
@@ -213,12 +204,7 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
 
                 if (req.outputValue == 0 || req.outputValue > 0xFF00)
                 {
-                    res.pdu.functionCode = FunctionCode.ErrorWriteSingleCoil;
-                    res.pdu.data = [ ExceptionCode.IllegalDataValue ];
-                    // length = bytes of Error(Error Code and Exception Code) + unit ID.
-                    //           1 + 1 + 1 = 3 bytes.
-                    res.header.length = 3;
-                    encodeResponse(conn, res);
+                    encodeErrorResponse(conn, &res, functionCode, ExceptionCode.IllegalDataValue);
                     return;
                 }
 
@@ -254,12 +240,7 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
 
                 if (req.quantityOfAddress == 0 || req.quantityOfAddress > 0x7B0)
                 {
-                    res.pdu.functionCode = FunctionCode.ErrorWriteMultipleCoils;
-                    res.pdu.data = [ ExceptionCode.IllegalDataValue ];
-                    // length = bytes of Error(Error Code and Exception Code) + unit ID.
-                    //           1 + 1 + 1 = 3 bytes.
-                    res.header.length = 3;
-                    encodeResponse(conn, res);
+                    encodeErrorResponse(conn, &res, functionCode, ExceptionCode.IllegalDataValue);
                     return;
                 }
 
@@ -276,17 +257,13 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
                 break;
 
             default: // == 0x0 or >= 0x80
-                res.pdu.data = [ ExceptionCode.IllegalFunctionCode ];
-                // length = bytes of Error(Error Code and Exception Code) + unit ID.
-                //           1 + 1 + 1 = 3 bytes.
-                res.header.length = 3;
-                encodeResponse(conn, res);
+                encodeErrorResponse(conn, &res, functionCode, ExceptionCode.IllegalFunctionCode);
                 return;
             }
 
             // length = bytes of PDU(Function Code and Data) + unit ID.
             res.header.length = cast(ushort)(res.pdu.data.length + 1 + 1);
 
-            encodeResponse(conn, res);
+            encodeResponse(conn, &res);
         }, address);
 }

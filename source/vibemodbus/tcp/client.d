@@ -109,12 +109,13 @@ struct Client
         return request(req);
     }
 
-    Response writeSingleCoil(ushort outputAddress, ushort outputValue)
+    Response writeSingleCoil(ushort outputAddress, bool state)
     {
         ubyte[] data = new ubyte[4];
         size_t index = 0;
         data.write!(ushort, Endian.bigEndian)(outputAddress, &index);
         assert(index == 2);
+        ushort outputValue = state ? 0xFF00 : 0x0;
         data.write!(ushort, Endian.bigEndian)(outputValue, &index);
         assert(index == 4);
         auto length = cast(short)(1 + 1 + data.length);
@@ -137,17 +138,16 @@ struct Client
         return request(req);
     }
 
-    Response writeMultipleCoils(ushort startingAddress, ushort quantity,
-                                ubyte byteCount, ubyte[] outputValue)
+    Response writeMultipleCoils(ushort startingAddress, ushort quantity, ubyte[] outputsValue)
     {
-        ubyte[] data = new ubyte[5 + outputValue.length];
+        ubyte[] data = new ubyte[5 + outputsValue.length];
         size_t index = 0;
         data.write!(ushort, Endian.bigEndian)(startingAddress, &index);
         assert(index == 2);
         data.write!(ushort, Endian.bigEndian)(quantity, &index);
         assert(index == 4);
-        data ~= byteCount;
-        data ~= outputValue;
+        data[5] = cast(ubyte)(outputsValue.length / 8 + 1);
+        data[6 .. $] = outputsValue;
         auto length = cast(short)(1 + 1 + data.length);
         auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
                            ProtocolDataUnit(FunctionCode.WriteMultipleCoils, data));

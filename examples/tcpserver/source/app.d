@@ -1,5 +1,3 @@
-import std.functional : toDelegate;
-import std.stdio;
 import vibe.vibe;
 import vibemodbus.tcp.server;
 

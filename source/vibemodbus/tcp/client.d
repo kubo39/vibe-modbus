@@ -255,8 +255,6 @@ struct Client
 
 void checkResponse(Response res, ubyte functionCode)
 {
-    import std.stdio;
-    writeln(res);
     if (res.header.protocolId != PROTOCOL_ID)
         throw new InvalidProtocolID(format("Invalid Protocol ID: %#x",
                                                res.header.protocolId));

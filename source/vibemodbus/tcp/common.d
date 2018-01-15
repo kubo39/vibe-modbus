@@ -12,6 +12,147 @@ alias Request = TCPApplicationDataUnit;
 alias Response = TCPApplicationDataUnit;
 
 
+/**
+Request type.
+ */
+
+struct ReadCoilsRequest
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ushort startingAddress;
+    ushort quantityOfCoils;
+}
+
+struct ReadDiscreteInputsRequest
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ushort startingAddress;
+    ushort quantityOfInputs;
+}
+
+struct ReadHoldingRegistersRequest
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ushort startingAddress;
+    ushort quantityOfRegisters;
+}
+
+struct ReadInputRegistersRequest
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ushort startingAddress;
+    ushort quantityOfInputRegisters;
+}
+
+struct WriteSingleCoilRequest
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ushort outputAddress;
+    ushort outputValue;
+}
+
+struct WriteSingleRegisterRequest
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ushort registerAddress;
+    ushort registerValue;
+}
+
+struct WriteMultipleCoilsRequest
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ushort startingAddress;
+    ushort quantityOfOutputs;
+    ubyte byteCount;
+    ubyte[] outputsValue;
+}
+
+struct WriteMultipleRegistersRequest
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ushort startingAddress;
+    ushort quantityOfRegisters;
+    ubyte byteCount;
+    ushort[] registersValue;
+}
+
+/**
+Response type.
+ */
+
+struct ReadCoilsResponse
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ubyte byteCount;
+    ubyte[] coilStatus;
+}
+
+struct ReadDiscreteInputsResponse
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ubyte byteCount;
+    ubyte[] inputStatus;
+}
+
+struct ReadHoldingRegistersResponse
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ubyte byteCount;
+    ushort[] registerStatus;
+}
+
+struct ReadInputRegistersResponse
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ubyte byteCount;
+    ushort[] inputRegisters;
+}
+
+struct WriteSingleCoilResponse
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ushort outputAddress;
+    bool state;
+}
+
+struct WriteSingleRegisterResponse
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ushort registerAddress;
+    ushort registerValue;
+}
+
+struct WriteMultipleCoilsResponse
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ushort startingAddress;
+    ushort quantityOfOutputs;
+}
+
+struct WriteMultipleRegistersResponse
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ushort startingAddress;
+    ushort quantityOfRegisters;
+}
+
+
 // Write MBAP Header fields.
 void encodeMBAPHeader(ubyte[] buffer, MBAPHeader header)
 {

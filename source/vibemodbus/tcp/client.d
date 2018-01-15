@@ -228,9 +228,9 @@ struct Client
 
     Response readWriteMultipleRegisters(ushort readStartingAddress, ushort readQuantity,
                                         ushort writeStartingAddress, ushort writeQuantity,
-                                        ubyte[] registersValue)
+                                        ushort[] registersValue)
     {
-        ubyte[] data = new ubyte[9 + registersValue.length];
+        ubyte[] data = new ubyte[9 + registersValue.length * 2];
         size_t index = 0;
         data.write!(ushort, Endian.bigEndian)(readStartingAddress, &index);
         assert(index == 2);
@@ -240,8 +240,9 @@ struct Client
         assert(index == 6);
         data.write!(ushort, Endian.bigEndian)(writeQuantity, &index);
         assert(index == 8);
-        data[8] = cast(ubyte)(registersValue.length / 8 + 1);
-        data[9 .. $] = registersValue;
+        data[index++] = cast(ubyte)(registersValue.length * 2);
+        foreach (value; registersValue)
+            data.write!(ushort, Endian.bigEndian)(value, &index);
         auto length = cast(short)(1 + 1 + data.length);
         auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
                            ProtocolDataUnit(FunctionCode.ReadWriteMultipleRegisters, data));

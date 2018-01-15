@@ -76,35 +76,7 @@ void decodeMBAPHeader(ref ubyte[] data, MBAPHeader* header)
 
 void decodePDU(ubyte[] data, ProtocolDataUnit* pdu)
 {
-    ubyte functionCode = data[0];
-
-    switch (functionCode) {
-    case FunctionCode.ReadCoils:
-    case FunctionCode.ReadDiscreteInputs:
-    case FunctionCode.ReadInputRegisters:
-    case FunctionCode.ReadHoldingRegisters:
-    case FunctionCode.WriteSingleCoil:
-    case FunctionCode.WriteSingleRegister:
-    case FunctionCode.WriteMultipleCoils:
-    case FunctionCode.WriteMultipleRegisters:
-    case FunctionCode.ReadWriteMultipleRegisters:
-
-        // Error Code
-    case FunctionCode.ErrorReadCoils:
-    case FunctionCode.ErrorReadDiscreteInputs:
-    case FunctionCode.ErrorReadInputRegisters:
-    case FunctionCode.ErrorReadHoldingRegisters:
-    case FunctionCode.ErrorWriteSingleCoil:
-    case FunctionCode.ErrorWriteSingleRegister:
-    case FunctionCode.ErrorWriteMultipleCoils:
-    case FunctionCode.ErrorWriteMultipleRegisters:
-    case FunctionCode.ErrorReadWriteMultipleRegisters:
-        break;
-    default:
-        throw new UnsupportedFunctionCode("Unsupported Function Code.");
-    }
-
-    pdu.functionCode = cast(FunctionCode) functionCode;
+    pdu.functionCode = data[0];
     pdu.data = data[1..$];
 }
 
@@ -116,14 +88,6 @@ unittest
         decodePDU(data, &pdu);
         assert(pdu.functionCode == FunctionCode.ReadCoils);
         assert(pdu.data == [0x0, 0x0]);
-    }
-
-    // Invalid FunctionCode
-    {
-        import std.exception : assertThrown;
-        ProtocolDataUnit pdu;
-        ubyte[] data = [0x0, 0x0, 0x0];
-        assertThrown(decodePDU(data, &pdu));
     }
 }
 

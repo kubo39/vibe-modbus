@@ -23,8 +23,8 @@ class ZeroHandler : ModbusRequestHandler
     void onReadHoldingRegisters(const ReadHoldingRegistersRequest* req, Response* res)
     {
         res.pdu.data = [
-            0x1,  // Byte count
-            0x0,  // Register value
+            0x2,      // Byte count
+            0x0, 0x1  // Register value (0x1)
             ];
     }
 

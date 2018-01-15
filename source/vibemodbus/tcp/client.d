@@ -12,6 +12,70 @@ public import vibemodbus.protocol.tcp;
 public import vibemodbus.tcp.common;
 
 
+struct ReadCoilsResponse
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ubyte byteCount;
+    ubyte[] coilStatus;
+}
+
+struct ReadDiscreteInputsResponse
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ubyte byteCount;
+    ubyte[] inputStatus;
+}
+
+struct ReadHoldingRegistersResponse
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ubyte byteCount;
+    ushort[] registerStatus;
+}
+
+struct ReadInputRegistersResponse
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ubyte byteCount;
+    ushort[] inputRegisters;
+}
+
+struct WriteSingleCoilResponse
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ushort outputAddress;
+    bool state;
+}
+
+struct WriteSingleRegisterResponse
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ushort registerAddress;
+    ushort registerValue;
+}
+
+struct WriteMultipleCoilsResponse
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ushort startingAddress;
+    ushort quantityOfOutputs;
+}
+
+struct WriteMultipleRegistersResponse
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ushort startingAddress;
+    ushort quantityOfRegisters;
+}
+
 // TODO:
 struct Client
 {

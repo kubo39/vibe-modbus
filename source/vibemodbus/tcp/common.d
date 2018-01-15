@@ -18,7 +18,7 @@ void encodeMBAPHeader(ubyte[] buffer, MBAPHeader header)
     size_t index = 0;
     buffer.write!(ushort, Endian.bigEndian)(header.transactionId, &index);
     assert(index == 2);
-    buffer.write!(ushort, Endian.bigEndian)(PROTOCOL_ID, &index);
+    buffer.write!(ushort, Endian.bigEndian)(header.protocolId, &index);
     assert(index == 4);
     buffer.write!(ushort, Endian.bigEndian)(header.length, &index);
     assert(index == 6);
@@ -62,7 +62,6 @@ void decodeMBAPHeader(ref ubyte[] data, MBAPHeader* header)
     // Start parsing MBAP header.
     auto transactionId = data.read!(ushort, Endian.bigEndian);
     auto protocolId = data.read!(ushort, Endian.bigEndian);
-    enforce!InvalidProtocolID(protocolId == PROTOCOL_ID, "Invalid Protocol ID.");
 
     // length = bytes of PDU + unit ID.
     auto length = data.read!(ushort, Endian.bigEndian);

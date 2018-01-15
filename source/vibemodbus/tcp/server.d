@@ -85,7 +85,17 @@ struct WriteMultipleCoilsRequest
     MBAPHeader header;
     ubyte functionCode;
     ushort startingAddress;
-    ushort quantityOfAddress;
+    ushort quantityOfOutputs;
+    ubyte byteCount;
+    ubyte[] outputsValue;
+}
+
+struct WriteMultipleRegistesRequest
+{
+    MBAPHeader header;
+    ubyte functionCode;
+    ushort startingAddress;
+    ushort quantityOfRegisters;
     ubyte byteCount;
     ushort[] registersValue;
 }
@@ -105,6 +115,8 @@ interface ModbusRequestHandler
     void onWriteSingleRegister(const WriteSingleRegisterRequest* req, Response* res);
 
     void onWriteMultipleCoils(const WriteMultipleCoilsRequest* req, Response* res);
+
+    void onWriteMultipleRegisters(const WriteMultipleRegistesRequest* req, Response* res);
 }
 
 
@@ -232,7 +244,26 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
                 req.header = header;
                 req.functionCode = functionCode;
                 req.startingAddress = buffer2.read!(ushort, Endian.bigEndian);
-                req.quantityOfAddress = buffer2.read!(ushort, Endian.bigEndian);
+                req.quantityOfOutputs = buffer2.read!(ushort, Endian.bigEndian);
+                req.byteCount = buffer2.read!(ubyte, Endian.bigEndian);
+                req.outputsValue = buffer2.dup;
+                res.header = req.header;
+
+                if (req.quantityOfOutputs == 0 || req.quantityOfOutputs > 0x7B0)
+                {
+                    encodeErrorResponse(conn, &res, functionCode, ExceptionCode.IllegalDataValue);
+                    return;
+                }
+
+                res.pdu.functionCode = req.functionCode;
+                handler.onWriteMultipleCoils(&req, &res);
+                break;
+            case Function.WriteMultipleRegisters:
+                WriteMultipleRegistersRequest req;
+                req.header = header;
+                req.functionCode = functionCode;
+                req.startingAddress = buffer2.read!(ushort, Endian.bigEndian);
+                req.quantityOfRegisters = buffer2.read!(ushort, Endian.bigEndian);
                 req.byteCount = buffer2.read!(ubyte, Endian.bigEndian);
 
                 ushort[] registersValue = new ushort[(header.length - 7) / 2];
@@ -244,16 +275,15 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
 
                 res.header = req.header;
 
-                if (req.quantityOfAddress == 0 || req.quantityOfAddress > 0x7B0)
+                if (req.quantityOfAddress == 0 || req.quantityOfAddress > 0x7B)
                 {
                     encodeErrorResponse(conn, &res, functionCode, ExceptionCode.IllegalDataValue);
                     return;
                 }
 
                 res.pdu.functionCode = req.functionCode;
-                handler.onWriteMultipleCoils(&req, &res);
+                handler.onWriteMultipleRegisters(&req, &res);
                 break;
-            case FunctionCode.WriteMultipleRegisters:
             case FunctionCode.ReadWriteMultipleRegisters:
 
                  // Unsupported Function Code.

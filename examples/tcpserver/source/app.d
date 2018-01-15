@@ -59,6 +59,14 @@ class ZeroHandler : ModbusRequestHandler
             0x0, 0x0,  // Quantity of Output
             ];
     }
+
+    void onWriteMultipleRegisters(const WriteMultipleRegistersRequest* req, Response* res)
+    {
+        res.pdu.data = [
+            0x0, 0x0,  // Startng Address
+            0x0, 0x0,  // Quantity of Registers
+            ];
+    }
 }
 
 

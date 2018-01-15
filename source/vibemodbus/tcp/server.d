@@ -152,7 +152,7 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
                 req.outputValue = buffer2.read!(ushort, Endian.bigEndian);
                 res.header = req.header;
 
-                if (req.outputValue == 0 || req.outputValue > 0xFF00)
+                if (req.outputValue != 0 || req.outputValue != 0xFF00)
                 {
                     encodeErrorResponse(conn, &res, functionCode, ExceptionCode.IllegalDataValue);
                     return;

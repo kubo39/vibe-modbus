@@ -69,7 +69,8 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
 
             if (header.protocolId != PROTOCOL_ID)
             {
-                encodeErrorResponse(conn, &res, functionCode, ExceptionCode.IllegalDataValue);
+                encodeErrorResponse(conn, &res, cast(ubyte)(functionCode + 0x80),
+                                    ExceptionCode.IllegalDataValue);
                 return;
             }
 
@@ -85,7 +86,8 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
 
                 if (req.quantityOfCoils == 0 || req.quantityOfCoils > 0x7D0)
                 {
-                    encodeErrorResponse(conn, &res, functionCode, ExceptionCode.IllegalDataValue);
+                    encodeErrorResponse(conn, &res, FunctionCode.ErrorReadCoils,
+                                        ExceptionCode.IllegalDataValue);
                     return;
                 }
 
@@ -102,7 +104,8 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
 
                 if (req.quantityOfInputs == 0 || req.quantityOfInputs > 0x7D0)
                 {
-                    encodeErrorResponse(conn, &res, functionCode, ExceptionCode.IllegalDataValue);
+                    encodeErrorResponse(conn, &res, FunctionCode.ErrorReadDiscreteInputs,
+                                        ExceptionCode.IllegalDataValue);
                     return;
                 }
 
@@ -119,7 +122,8 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
 
                 if (req.quantityOfRegisters == 0 || req.quantityOfRegisters > 0x7D)
                 {
-                    encodeErrorResponse(conn, &res, functionCode, ExceptionCode.IllegalDataValue);
+                    encodeErrorResponse(conn, &res, FunctionCode.ErrorReadHoldingRegisters,
+                                        ExceptionCode.IllegalDataValue);
                     return;
                 }
 
@@ -136,7 +140,8 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
 
                 if (req.quantityOfInputRegisters == 0 || req.quantityOfInputRegisters > 0x7D)
                 {
-                    encodeErrorResponse(conn, &res, functionCode, ExceptionCode.IllegalDataValue);
+                    encodeErrorResponse(conn, &res, FunctionCode.ErrorReadInputRegisters,
+                                        ExceptionCode.IllegalDataValue);
                     return;
                 }
 
@@ -153,7 +158,8 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
 
                 if (req.outputValue != 0 || req.outputValue != 0xFF00)
                 {
-                    encodeErrorResponse(conn, &res, functionCode, ExceptionCode.IllegalDataValue);
+                    encodeErrorResponse(conn, &res, FunctionCode.ErrorWriteSingleCoil,
+                                        ExceptionCode.IllegalDataValue);
                     return;
                 }
 
@@ -182,7 +188,8 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
 
                 if (req.quantityOfOutputs == 0 || req.quantityOfOutputs > 0x7B0)
                 {
-                    encodeErrorResponse(conn, &res, functionCode, ExceptionCode.IllegalDataValue);
+                    encodeErrorResponse(conn, &res, FunctionCode.ErrorWriteMultipleCoils,
+                                        ExceptionCode.IllegalDataValue);
                     return;
                 }
 
@@ -208,7 +215,8 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
 
                 if (req.quantityOfRegisters == 0 || req.quantityOfRegisters > 0x7B)
                 {
-                    encodeErrorResponse(conn, &res, functionCode, ExceptionCode.IllegalDataValue);
+                    encodeErrorResponse(conn, &res, FunctionCode.ErrorWriteMultipleRegisters,
+                                        ExceptionCode.IllegalDataValue);
                     return;
                 }
 
@@ -221,10 +229,12 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
             case 0x7: .. case 0xE:
             case 0x11: .. case 0x16:
             case 0x18: .. case 0x79:
-                break;
-
+                encodeErrorResponse(conn, &res, cast(ubyte)(functionCode + 0x80),
+                                    ExceptionCode.IllegalFunctionCode);
+                return;
             default: // == 0x0 or >= 0x80
-                encodeErrorResponse(conn, &res, functionCode, ExceptionCode.IllegalFunctionCode);
+                encodeErrorResponse(conn, &res, functionCode,
+                                    ExceptionCode.IllegalFunctionCode);
                 return;
             }
 

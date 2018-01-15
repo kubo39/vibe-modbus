@@ -197,6 +197,15 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
                 ushort quantityOfRegisters = buffer2.read!(ushort, Endian.bigEndian);
                 ubyte byteCount = buffer2.read!(ubyte, Endian.bigEndian);
 
+                if (quantityOfRegisters == 0x0 || quantityOfRegisters > 0x7B
+                    || byteCount % 2 != 0)
+                {
+                    encodeErrorResponse(conn, &res,
+                                        FunctionCode.ErrorWriteMultipleRegisters,
+                                        ExceptionCode.IllegalDataValue);
+                    return;
+                }
+
                 ushort[] registersValue = new ushort[(header.length - 7) / 2];
                 while (buffer2.length)
                     registersValue ~= buffer2.read!(ushort, Endian.bigEndian);

@@ -18,7 +18,7 @@ void main()
 
     writeln("\n");
 
-    writeln("Calling Write Single Registers");
+    writeln("Calling Write Single Register");
     auto res2 = client.writeSingleRegister(0x1000, 20);
     writeln("MBAP Header: ");
     writeln("  transaction id: ", res2.header.transactionId);
@@ -28,4 +28,17 @@ void main()
     writeln("FunctionCode: ", cast(FunctionCode) res2.functionCode);
     writeln("Register Address: ", res2.registerAddress);
     writeln("Register Value: ", res2.registerValue);
+
+    writeln("\n");
+
+    writeln("Calling Write Multiple Registers");
+    auto res3 = client.writeMultipleRegisters(0x1000, 0x20, [0x10, 0x10]);
+    writeln("MBAP Header: ");
+    writeln("  transaction id: ", res3.header.transactionId);
+    writeln("  protocol id: ", res3.header.protocolId);
+    writeln("  length: ", res3.header.length);
+    writeln("  unit id: ", res3.header.unitId);
+    writeln("FunctionCode: ", cast(FunctionCode) res3.functionCode);
+    writeln("Starting Address: ", res3.startingAddress);
+    writeln("Quantity of Registers: ", res3.quantityOfRegisters);
 }

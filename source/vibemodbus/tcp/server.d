@@ -90,7 +90,7 @@ struct WriteMultipleCoilsRequest
     ubyte[] outputsValue;
 }
 
-struct WriteMultipleRegistesRequest
+struct WriteMultipleRegistersRequest
 {
     MBAPHeader header;
     ubyte functionCode;
@@ -116,7 +116,7 @@ interface ModbusRequestHandler
 
     void onWriteMultipleCoils(const WriteMultipleCoilsRequest* req, Response* res);
 
-    void onWriteMultipleRegisters(const WriteMultipleRegistesRequest* req, Response* res);
+    void onWriteMultipleRegisters(const WriteMultipleRegistersRequest* req, Response* res);
 }
 
 
@@ -258,7 +258,7 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
                 res.pdu.functionCode = req.functionCode;
                 handler.onWriteMultipleCoils(&req, &res);
                 break;
-            case Function.WriteMultipleRegisters:
+            case FunctionCode.WriteMultipleRegisters:
                 WriteMultipleRegistersRequest req;
                 req.header = header;
                 req.functionCode = functionCode;
@@ -275,7 +275,7 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
 
                 res.header = req.header;
 
-                if (req.quantityOfAddress == 0 || req.quantityOfAddress > 0x7B)
+                if (req.quantityOfRegisters == 0 || req.quantityOfRegisters > 0x7B)
                 {
                     encodeErrorResponse(conn, &res, functionCode, ExceptionCode.IllegalDataValue);
                     return;

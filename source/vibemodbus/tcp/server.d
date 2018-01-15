@@ -1,7 +1,6 @@
 module vibemodbus.tcp.server;
 
 import std.bitmanip : read, write;
-import std.exception : enforce;
 import std.system : Endian;
 
 import vibe.core.net;

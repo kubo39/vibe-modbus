@@ -77,11 +77,10 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
             switch (functionCode)
             {
             case FunctionCode.ReadCoils:
-                ReadCoilsRequest req;
-                req.header = header;
-                req.functionCode = functionCode;
-                req.startingAddress = buffer2.read!(ushort, Endian.bigEndian);
-                req.quantityOfCoils = buffer2.read!(ushort, Endian.bigEndian);
+                ushort startingAddress = buffer2.read!(ushort, Endian.bigEndian);
+                ushort quantityOfCoils = buffer2.read!(ushort, Endian.bigEndian);
+                auto req = ReadCoilsRequest(header, functionCode,
+                                            startingAddress, quantityOfCoils);
                 res.header = req.header;
 
                 if (req.quantityOfCoils == 0 || req.quantityOfCoils > 0x7D0)
@@ -95,11 +94,10 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
                 handler.onReadCoils(&req, &res);
                 break;
             case FunctionCode.ReadDiscreteInputs:
-                ReadDiscreteInputsRequest req;
-                req.header = header;
-                req.functionCode = functionCode;
-                req.startingAddress = buffer2.read!(ushort, Endian.bigEndian);
-                req.quantityOfInputs = buffer2.read!(ushort, Endian.bigEndian);
+                ushort startingAddress = buffer2.read!(ushort, Endian.bigEndian);
+                ushort quantityOfInputs = buffer2.read!(ushort, Endian.bigEndian);
+                auto req = ReadDiscreteInputsRequest(header, functionCode,
+                                                     startingAddress, quantityOfInputs);
                 res.header = req.header;
 
                 if (req.quantityOfInputs == 0 || req.quantityOfInputs > 0x7D0)
@@ -113,11 +111,11 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
                 handler.onReadDiscreteInputs(&req, &res);
                 break;
             case FunctionCode.ReadHoldingRegisters:
-                ReadHoldingRegistersRequest req;
-                req.header = header;
-                req.functionCode = functionCode;
-                req.startingAddress = buffer2.read!(ushort, Endian.bigEndian);
-                req.quantityOfRegisters = buffer2.read!(ushort, Endian.bigEndian);
+                ushort startingAddress = buffer2.read!(ushort, Endian.bigEndian);
+                ushort quantityOfRegisters = buffer2.read!(ushort, Endian.bigEndian);
+                auto req = ReadHoldingRegistersRequest(header, functionCode,
+                                                       startingAddress,
+                                                       quantityOfRegisters);
                 res.header = req.header;
 
                 if (req.quantityOfRegisters == 0 || req.quantityOfRegisters > 0x7D)
@@ -131,11 +129,11 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
                 handler.onReadHoldingRegisters(&req, &res);
                 break;
             case FunctionCode.ReadInputRegisters:
-                ReadInputRegistersRequest req;
-                req.header = header;
-                req.functionCode = functionCode;
-                req.startingAddress = buffer2.read!(ushort, Endian.bigEndian);
-                req.quantityOfInputRegisters = buffer2.read!(ushort, Endian.bigEndian);
+                ushort startingAddress = buffer2.read!(ushort, Endian.bigEndian);
+                ushort quantityOfInputRegisters = buffer2.read!(ushort, Endian.bigEndian);
+                auto req = ReadInputRegistersRequest(header, functionCode,
+                                                     startingAddress,
+                                                     quantityOfInputRegisters);
                 res.header = req.header;
 
                 if (req.quantityOfInputRegisters == 0 || req.quantityOfInputRegisters > 0x7D)
@@ -149,11 +147,10 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
                 handler.onReadInputRegisters(&req, &res);
                 break;
             case FunctionCode.WriteSingleCoil:
-                WriteSingleCoilRequest req;
-                req.header = header;
-                req.functionCode = functionCode;
-                req.outputAddress = buffer2.read!(ushort, Endian.bigEndian);
-                req.outputValue = buffer2.read!(ushort, Endian.bigEndian);
+                ushort outputAddress = buffer2.read!(ushort, Endian.bigEndian);
+                ushort outputValue = buffer2.read!(ushort, Endian.bigEndian);
+                auto req = WriteSingleCoilRequest(header, functionCode,
+                                                  outputAddress, outputValue);
                 res.header = req.header;
 
                 if (req.outputValue != 0 || req.outputValue != 0xFF00)
@@ -167,23 +164,22 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
                 handler.onWriteSingleCoil(&req, &res);
                 break;
             case FunctionCode.WriteSingleRegister:
-                WriteSingleRegisterRequest req;
-                req.header = header;
-                req.functionCode = functionCode;
-                req.registerAddress = buffer2.read!(ushort, Endian.bigEndian);
-                req.registerValue = buffer2.read!(ushort, Endian.bigEndian);
+                ushort registerAddress = buffer2.read!(ushort, Endian.bigEndian);
+                ushort registerValue = buffer2.read!(ushort, Endian.bigEndian);
+                auto req = WriteSingleRegisterRequest(header, functionCode,
+                                                      registerAddress, registerValue);
                 res.header = req.header;
                 res.pdu.functionCode = req.functionCode;
                 handler.onWriteSingleRegister(&req, &res);
                 break;
             case FunctionCode.WriteMultipleCoils:
-                WriteMultipleCoilsRequest req;
-                req.header = header;
-                req.functionCode = functionCode;
-                req.startingAddress = buffer2.read!(ushort, Endian.bigEndian);
-                req.quantityOfOutputs = buffer2.read!(ushort, Endian.bigEndian);
-                req.byteCount = buffer2.read!(ubyte, Endian.bigEndian);
-                req.outputsValue = buffer2.dup;
+                ushort startingAddress = buffer2.read!(ushort, Endian.bigEndian);
+                ushort quantityOfOutputs = buffer2.read!(ushort, Endian.bigEndian);
+                ubyte byteCount = buffer2.read!(ubyte, Endian.bigEndian);
+                ubyte[] outputsValue = buffer2.dup;
+                auto req = WriteMultipleCoilsRequest(header, functionCode,
+                                                     startingAddress, quantityOfOutputs,
+                                                     byteCount, outputsValue);
                 res.header = req.header;
 
                 if (req.quantityOfOutputs == 0 || req.quantityOfOutputs > 0x7B0)
@@ -197,19 +193,19 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
                 handler.onWriteMultipleCoils(&req, &res);
                 break;
             case FunctionCode.WriteMultipleRegisters:
-                WriteMultipleRegistersRequest req;
-                req.header = header;
-                req.functionCode = functionCode;
-                req.startingAddress = buffer2.read!(ushort, Endian.bigEndian);
-                req.quantityOfRegisters = buffer2.read!(ushort, Endian.bigEndian);
-                req.byteCount = buffer2.read!(ubyte, Endian.bigEndian);
+                ushort startingAddress = buffer2.read!(ushort, Endian.bigEndian);
+                ushort quantityOfRegisters = buffer2.read!(ushort, Endian.bigEndian);
+                ubyte byteCount = buffer2.read!(ubyte, Endian.bigEndian);
 
                 ushort[] registersValue = new ushort[(header.length - 7) / 2];
                 while (buffer2.length)
-                {
                     registersValue ~= buffer2.read!(ushort, Endian.bigEndian);
-                }
-                req.registersValue = registersValue;
+
+                auto req = WriteMultipleRegistersRequest(header, functionCode,
+                                                         startingAddress,
+                                                         quantityOfRegisters,
+                                                         byteCount,
+                                                         registersValue);
 
                 res.header = req.header;
 

@@ -109,7 +109,7 @@ struct ReadHoldingRegistersResponse
     MBAPHeader header;
     ubyte functionCode;
     ubyte byteCount;
-    ushort[] registerStatus;
+    ushort[] registerValue;
 }
 
 struct ReadInputRegistersResponse

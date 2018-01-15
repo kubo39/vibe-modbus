@@ -1,7 +1,10 @@
 module vibemodbus.tcp.client;
 
+import std.algorithm : map;
+import std.array : array;
 import std.bitmanip : read, write;
 import std.exception : enforce;
+import std.range : chunks;
 import std.system : Endian;
 
 import vibe.core.net;
@@ -12,7 +15,6 @@ public import vibemodbus.protocol.tcp;
 public import vibemodbus.tcp.common;
 
 
-// TODO:
 struct Client
 {
     string host;
@@ -53,7 +55,7 @@ struct Client
         return res;
     }
 
-    Response readCoils(ushort startingAddress, ushort quantity)
+    ReadCoilsResponse readCoils(ushort startingAddress, ushort quantity)
     {
         ubyte[] data = new ubyte[4];
         size_t index = 0;
@@ -64,10 +66,12 @@ struct Client
         auto length = cast(ushort)(1 + 1 + data.length);
         auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
                            ProtocolDataUnit(FunctionCode.ReadCoils, data));
-        return request(req);
+        auto res = request(req);
+        return ReadCoilsResponse(res.header, res.pdu.functionCode,
+                                 res.pdu.data[0], res.pdu.data[1 .. $]);
     }
 
-    Response readDiscreteInputs(ushort startingAddress, ushort quantity)
+    ReadDiscreteInputsResponse readDiscreteInputs(ushort startingAddress, ushort quantity)
     {
         ubyte[] data = new ubyte[4];
         size_t index = 0;
@@ -78,10 +82,12 @@ struct Client
         auto length = cast(short)(1 + 1 + data.length);
         auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
                            ProtocolDataUnit(FunctionCode.ReadDiscreteInputs, data));
-        return request(req);
+        auto res = request(req);
+        return ReadDiscreteInputsResponse(res.header, res.pdu.functionCode,
+                                          res.pdu.data[0], res.pdu.data[1 .. $]);
     }
 
-    Response readHoldingRegisters(ushort startingAddress, ushort quantity)
+    ReadHoldingRegistersResponse readHoldingRegisters(ushort startingAddress, ushort quantity)
     {
         ubyte[] data = new ubyte[4];
         size_t index = 0;
@@ -92,10 +98,16 @@ struct Client
         auto length = cast(short)(1 + 1 + data.length);
         auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
                            ProtocolDataUnit(FunctionCode.ReadHoldingRegisters, data));
-        return request(req);
+        auto res =request(req);
+        ubyte byteCount = res.pdu.data.read!(ubyte, Endian.bigEndian);
+        ushort[] registerValue = res.pdu.data.chunks(2)
+            .map!(a => a.read!(ushort, Endian.bigEndian))
+            .array;
+        return ReadHoldingRegistersResponse(res.header, res.pdu.functionCode,
+                                            byteCount, registerValue);
     }
 
-    Response readInputRegisters(ushort startingAddress, ushort quantity)
+    ReadInputRegistersResponse readInputRegisters(ushort startingAddress, ushort quantity)
     {
         ubyte[] data = new ubyte[4];
         size_t index = 0;
@@ -106,43 +118,56 @@ struct Client
         auto length = cast(short)(1 + 1 + data.length);
         auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
                            ProtocolDataUnit(FunctionCode.ReadInputRegisters, data));
-        return request(req);
+        auto res = request(req);
+        ubyte byteCount = res.pdu.data.read!(ubyte, Endian.bigEndian);
+        ushort[] inputRegisters = res.pdu.data.chunks(2)
+            .map!(a => a.read!(ushort, Endian.bigEndian))
+            .array;
+        return ReadInputRegistersResponse(res.header, res.pdu.functionCode,
+                                          byteCount, inputRegisters);
     }
 
-    Response writeSingleCoil(ushort outputAddress, bool state)
+    WriteSingleCoilResponse writeSingleCoil(ushort address, bool state)
     {
         ubyte[] data = new ubyte[4];
         size_t index = 0;
-        data.write!(ushort, Endian.bigEndian)(outputAddress, &index);
+        data.write!(ushort, Endian.bigEndian)(address, &index);
         assert(index == 2);
-        ushort outputValue = state ? 0xFF00 : 0x0;
-        data.write!(ushort, Endian.bigEndian)(outputValue, &index);
+        data.write!(ushort, Endian.bigEndian)(state ? 0xFF00 : 0x0, &index);
         assert(index == 4);
         auto length = cast(short)(1 + 1 + data.length);
         auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
                            ProtocolDataUnit(FunctionCode.WriteSingleCoil, data));
-        return request(req);
+        auto res = request(req);
+        ushort outputAddress = res.pdu.data.read!(ushort, Endian.bigEndian);
+        ushort outputValue = res.pdu.data.read!(ushort, Endian.bigEndian);
+        return WriteSingleCoilResponse(res.header, res.pdu.functionCode,
+                                       outputAddress, outputValue == 0xFF00);
     }
 
-    Response writeSingleRegister(ushort registerAddress, ushort registerValue)
+    WriteSingleRegisterResponse writeSingleRegister(ushort address, ushort value)
     {
         ubyte[] data = new ubyte[4];
         size_t index = 0;
-        data.write!(ushort, Endian.bigEndian)(registerAddress, &index);
+        data.write!(ushort, Endian.bigEndian)(address, &index);
         assert(index == 2);
-        data.write!(ushort, Endian.bigEndian)(registerValue, &index);
+        data.write!(ushort, Endian.bigEndian)(value, &index);
         assert(index == 4);
         auto length = cast(short)(1 + 1 + data.length);
         auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
                            ProtocolDataUnit(FunctionCode.WriteSingleRegister, data));
-        return request(req);
+        auto res = request(req);
+        ushort registerAddress = res.pdu.data.read!(ushort, Endian.bigEndian);
+        ushort registerValue = res.pdu.data.read!(ushort, Endian.bigEndian);
+        return WriteSingleRegisterResponse(res.header, res.pdu.functionCode,
+                                           registerAddress, registerValue);
     }
 
-    Response writeMultipleCoils(ushort startingAddress, ushort quantity, ubyte[] outputsValue)
+    WriteMultipleCoilsResponse writeMultipleCoils(ushort address, ushort quantity, ubyte[] outputsValue)
     {
         ubyte[] data = new ubyte[5 + outputsValue.length];
         size_t index = 0;
-        data.write!(ushort, Endian.bigEndian)(startingAddress, &index);
+        data.write!(ushort, Endian.bigEndian)(address, &index);
         assert(index == 2);
         data.write!(ushort, Endian.bigEndian)(quantity, &index);
         assert(index == 4);
@@ -151,14 +176,18 @@ struct Client
         auto length = cast(short)(1 + 1 + data.length);
         auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
                            ProtocolDataUnit(FunctionCode.WriteMultipleCoils, data));
-        return request(req);
+        auto res = request(req);
+        ushort startingAddress = res.pdu.data.read!(ushort, Endian.bigEndian);
+        ushort quantityOfOutputs = res.pdu.data.read!(ushort, Endian.bigEndian);
+        return WriteMultipleCoilsResponse(res.header, res.pdu.functionCode,
+                                          startingAddress, quantityOfOutputs);
     }
 
-    Response writeMultipleRegisters(ushort startingAddress, ushort quantity, ubyte[] registersValue)
+    WriteMultipleRegistersResponse writeMultipleRegisters(ushort address, ushort quantity, ubyte[] registersValue)
     {
         ubyte[] data = new ubyte[5 + registersValue.length];
         size_t index = 0;
-        data.write!(ushort, Endian.bigEndian)(startingAddress, &index);
+        data.write!(ushort, Endian.bigEndian)(address, &index);
         assert(index == 2);
         data.write!(ushort, Endian.bigEndian)(quantity, &index);
         assert(index == 4);
@@ -167,7 +196,11 @@ struct Client
         auto length = cast(short)(1 + 1 + data.length);
         auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
                            ProtocolDataUnit(FunctionCode.WriteMultipleRegisters, data));
-        return request(req);
+        auto res = request(req);
+        ushort startingAddress = res.pdu.data.read!(ushort, Endian.bigEndian);
+        ushort quantityOfRegisters = res.pdu.data.read!(ushort, Endian.bigEndian);
+        return WriteMultipleRegistersResponse(res.header, res.pdu.functionCode,
+                                              startingAddress, quantityOfRegisters);
     }
 
     Response readWriteMultipleRegisters(ushort readStartingAddress, ushort readQuantity,

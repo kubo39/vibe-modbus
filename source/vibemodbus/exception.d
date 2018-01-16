@@ -21,13 +21,3 @@ class UnsupportedFunctionCode : Exception
 {
     mixin basicExceptionCtors;
 }
-
-class ErrorResponse : Exception
-{
-    mixin basicExceptionCtors;
-}
-
-class IllegalDataValue : Exception
-{
-    mixin basicExceptionCtors;
-}

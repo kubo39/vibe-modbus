@@ -1,4 +1,10 @@
+import std.algorithm : map;
+import std.array : array;
+import std.bitmanip : read;
+import std.range : chunks;
 import std.stdio;
+import std.system : Endian;
+
 import vibemodbus.tcp.client;
 
 void callReadHoldingRegisters(Client client)
@@ -10,9 +16,12 @@ void callReadHoldingRegisters(Client client)
     writeln("  protocol id: ", res.header.protocolId);
     writeln("  length: ", res.header.length);
     writeln("  unit id: ", res.header.unitId);
-    writefln("FunctionCode: %#x", cast(FunctionCode) res.functionCode);
-    writefln("Byte Count: %#x", res.byteCount);
-    writefln("Register Value: [%(%#x %)]", res.registerValue);
+    writefln("FunctionCode: %#x", cast(FunctionCode) res.pdu.functionCode);
+    writefln("Byte Count: %#x", res.pdu.data.read!(ubyte, Endian.bigEndian));
+    ushort[] registerValue = res.pdu.data.chunks(2)
+        .map!(a => a.read!(ushort, Endian.bigEndian))
+        .array;
+    writefln("Register Value: [%(%#x %)]", registerValue);
 }
 
 void callWriteSingleRegister(Client client)
@@ -24,9 +33,9 @@ void callWriteSingleRegister(Client client)
     writeln("  protocol id: ", res.header.protocolId);
     writeln("  length: ", res.header.length);
     writeln("  unit id: ", res.header.unitId);
-    writefln("FunctionCode: %#x", cast(FunctionCode) res.functionCode);
-    writefln("Register Address: %#x", res.registerAddress);
-    writefln("Register Value: %#x", res.registerValue);
+    writefln("FunctionCode: %#x", cast(FunctionCode) res.pdu.functionCode);
+    writefln("Register Address: %#x", res.pdu.data.read!(ushort, Endian.bigEndian));
+    writefln("Register Value: %#x", res.pdu.data.read!(ushort, Endian.bigEndian));
 }
 
 void callWriteMultipleRegisters(Client client)
@@ -38,9 +47,9 @@ void callWriteMultipleRegisters(Client client)
     writeln("  protocol id: ", res.header.protocolId);
     writeln("  length: ", res.header.length);
     writeln("  unit id: ", res.header.unitId);
-    writefln("FunctionCode: %#x", cast(FunctionCode) res.functionCode);
-    writefln("Starting Address: %#x", res.startingAddress);
-    writefln("Quantity of Registers: %#x", res.quantityOfRegisters);
+    writefln("FunctionCode: %#x", cast(FunctionCode) res.pdu.functionCode);
+    writefln("Starting Address: %#x", res.pdu.data.read!(ushort, Endian.bigEndian));
+    writefln("Quantity of Registers: %#x", res.pdu.data.read!(ushort, Endian.bigEndian));
 }
 
 void main()

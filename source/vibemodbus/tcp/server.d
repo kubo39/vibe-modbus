@@ -83,10 +83,16 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
                                             startingAddress, quantityOfCoils);
                 res.header = req.header;
 
-                if (req.quantityOfCoils == 0 || req.quantityOfCoils > 0x7D0)
+                if (quantityOfCoils == 0 || quantityOfCoils > 0x7D0)
                 {
                     encodeErrorResponse(conn, &res, FunctionCode.ErrorReadCoils,
                                         ExceptionCode.IllegalDataValue);
+                    return;
+                }
+                if (startingAddress + quantityOfCoils > ushort.max)
+                {
+                    encodeErrorResponse(conn, &res, FunctionCode.ErrorReadCoils,
+                                        ExceptionCode.IllegalDataAddress);
                     return;
                 }
 
@@ -100,10 +106,16 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
                                                      startingAddress, quantityOfInputs);
                 res.header = req.header;
 
-                if (req.quantityOfInputs == 0 || req.quantityOfInputs > 0x7D0)
+                if (quantityOfInputs == 0 || quantityOfInputs > 0x7D0)
                 {
                     encodeErrorResponse(conn, &res, FunctionCode.ErrorReadDiscreteInputs,
                                         ExceptionCode.IllegalDataValue);
+                    return;
+                }
+                if (startingAddress + quantityOfInputs > ushort.max)
+                {
+                    encodeErrorResponse(conn, &res, FunctionCode.ErrorReadDiscreteInputs,
+                                        ExceptionCode.IllegalDataAddress);
                     return;
                 }
 
@@ -118,10 +130,16 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
                                                        quantityOfRegisters);
                 res.header = req.header;
 
-                if (req.quantityOfRegisters == 0 || req.quantityOfRegisters > 0x7D)
+                if (quantityOfRegisters == 0 || quantityOfRegisters > 0x7D)
                 {
                     encodeErrorResponse(conn, &res, FunctionCode.ErrorReadHoldingRegisters,
                                         ExceptionCode.IllegalDataValue);
+                    return;
+                }
+                if (startingAddress + quantityOfRegisters > ushort.max)
+                {
+                    encodeErrorResponse(conn, &res, FunctionCode.ErrorReadHoldingRegisters,
+                                        ExceptionCode.IllegalDataAddress);
                     return;
                 }
 
@@ -136,10 +154,16 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
                                                      quantityOfInputRegisters);
                 res.header = req.header;
 
-                if (req.quantityOfInputRegisters == 0 || req.quantityOfInputRegisters > 0x7D)
+                if (quantityOfInputRegisters == 0 || quantityOfInputRegisters > 0x7D)
                 {
                     encodeErrorResponse(conn, &res, FunctionCode.ErrorReadInputRegisters,
                                         ExceptionCode.IllegalDataValue);
+                    return;
+                }
+                if (startingAddress + quantityOfInputRegisters > ushort.max)
+                {
+                    encodeErrorResponse(conn, &res, FunctionCode.ErrorReadInputRegisters,
+                                        ExceptionCode.IllegalDataAddress);
                     return;
                 }
 
@@ -182,10 +206,16 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
                                                      byteCount, outputsValue);
                 res.header = req.header;
 
-                if (req.quantityOfOutputs == 0 || req.quantityOfOutputs > 0x7B0)
+                if (quantityOfOutputs == 0 || quantityOfOutputs > 0x7B0)
                 {
                     encodeErrorResponse(conn, &res, FunctionCode.ErrorWriteMultipleCoils,
                                         ExceptionCode.IllegalDataValue);
+                    return;
+                }
+                if (startingAddress + quantityOfOutputs > ushort.max)
+                {
+                    encodeErrorResponse(conn, &res, FunctionCode.ErrorWriteMultipleCoils,
+                                        ExceptionCode.IllegalDataAddress);
                     return;
                 }
 
@@ -203,6 +233,13 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
                     encodeErrorResponse(conn, &res,
                                         FunctionCode.ErrorWriteMultipleRegisters,
                                         ExceptionCode.IllegalDataValue);
+                    return;
+                }
+                if (startingAddress + quantityOfRegisters > ushort.max)
+                {
+                    encodeErrorResponse(conn, &res,
+                                        FunctionCode.ErrorWriteMultipleRegisters,
+                                        ExceptionCode.IllegalDataAddress);
                     return;
                 }
 

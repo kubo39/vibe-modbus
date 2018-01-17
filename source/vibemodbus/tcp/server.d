@@ -177,7 +177,7 @@ TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
                                                   outputAddress, outputValue);
                 res.header = req.header;
 
-                if (req.outputValue != 0 || req.outputValue != 0xFF00)
+                if (outputValue != 0 || outputValue != 0xFF00)
                 {
                     encodeErrorResponse(conn, &res, FunctionCode.ErrorWriteSingleCoil,
                                         ExceptionCode.IllegalDataValue);

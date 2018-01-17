@@ -1,5 +1,6 @@
 module vibemodbus.tcp.client;
 
+import core.atomic : atomicOp, atomicLoad;
 import std.bitmanip : read, write;
 import std.exception : enforce;
 import std.system : Endian;
@@ -12,15 +13,17 @@ public import vibemodbus.protocol.tcp;
 public import vibemodbus.tcp.common;
 
 
-struct Client
+class Client
 {
     string host;
     ushort port;
+    shared ushort transactionId;
 
     this(string host, ushort port)
     {
         this.host = host;
         this.port = port;
+        this.transactionId = 0;
     }
 
     Response request(Request req)
@@ -61,8 +64,9 @@ struct Client
         data.write!(ushort, Endian.bigEndian)(quantity, &index);
         assert(index == 4);
         auto length = cast(ushort)(1 + 1 + data.length);
-        auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
+        auto req = Request(MBAPHeader(this.transactionId.atomicLoad, PROTOCOL_ID, length, 0),
                            ProtocolDataUnit(FunctionCode.ReadCoils, data));
+        atomicOp!"+="(this.transactionId, 1);
         return request(req);
     }
 
@@ -75,8 +79,9 @@ struct Client
         data.write!(ushort, Endian.bigEndian)(quantity, &index);
         assert(index == 4);
         auto length = cast(short)(1 + 1 + data.length);
-        auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
+        auto req = Request(MBAPHeader(this.transactionId.atomicLoad, PROTOCOL_ID, length, 0),
                            ProtocolDataUnit(FunctionCode.ReadDiscreteInputs, data));
+        atomicOp!"+="(this.transactionId, 1);
         return request(req);
     }
 
@@ -89,8 +94,9 @@ struct Client
         data.write!(ushort, Endian.bigEndian)(quantity, &index);
         assert(index == 4);
         auto length = cast(short)(1 + 1 + data.length);
-        auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
+        auto req = Request(MBAPHeader(this.transactionId.atomicLoad, PROTOCOL_ID, length, 0),
                            ProtocolDataUnit(FunctionCode.ReadHoldingRegisters, data));
+        atomicOp!"+="(this.transactionId, 1);
         return request(req);
     }
 
@@ -103,8 +109,9 @@ struct Client
         data.write!(ushort, Endian.bigEndian)(quantity, &index);
         assert(index == 4);
         auto length = cast(short)(1 + 1 + data.length);
-        auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
+        auto req = Request(MBAPHeader(this.transactionId.atomicLoad, PROTOCOL_ID, length, 0),
                            ProtocolDataUnit(FunctionCode.ReadInputRegisters, data));
+        atomicOp!"+="(this.transactionId, 1);
         return request(req);
     }
 
@@ -117,8 +124,9 @@ struct Client
         data.write!(ushort, Endian.bigEndian)(state ? 0xFF00 : 0x0, &index);
         assert(index == 4);
         auto length = cast(short)(1 + 1 + data.length);
-        auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
+        auto req = Request(MBAPHeader(this.transactionId.atomicLoad, PROTOCOL_ID, length, 0),
                            ProtocolDataUnit(FunctionCode.WriteSingleCoil, data));
+        atomicOp!"+="(this.transactionId, 1);
         return request(req);
     }
 
@@ -131,8 +139,9 @@ struct Client
         data.write!(ushort, Endian.bigEndian)(value, &index);
         assert(index == 4);
         auto length = cast(short)(1 + 1 + data.length);
-        auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
+        auto req = Request(MBAPHeader(this.transactionId.atomicLoad, PROTOCOL_ID, length, 0),
                            ProtocolDataUnit(FunctionCode.WriteSingleRegister, data));
+        atomicOp!"+="(this.transactionId, 1);
         return request(req);
     }
 
@@ -147,8 +156,9 @@ struct Client
         data[4] = cast(ubyte)(outputsValue.length / 8 + 1);
         data[5 .. $] = outputsValue;
         auto length = cast(short)(1 + 1 + data.length);
-        auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
+        auto req = Request(MBAPHeader(this.transactionId.atomicLoad, PROTOCOL_ID, length, 0),
                            ProtocolDataUnit(FunctionCode.WriteMultipleCoils, data));
+        atomicOp!"+="(this.transactionId, 1);
         return request(req);
     }
 
@@ -164,8 +174,9 @@ struct Client
         foreach (value; registersValue)
             data.write!(ushort, Endian.bigEndian)(value, &index);
         auto length = cast(short)(1 + 1 + data.length);
-        auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
+        auto req = Request(MBAPHeader(this.transactionId.atomicLoad, PROTOCOL_ID, length, 0),
                            ProtocolDataUnit(FunctionCode.WriteMultipleRegisters, data));
+        atomicOp!"+="(this.transactionId, 1);
         return request(req);
     }
 
@@ -187,8 +198,9 @@ struct Client
         foreach (value; registersValue)
             data.write!(ushort, Endian.bigEndian)(value, &index);
         auto length = cast(short)(1 + 1 + data.length);
-        auto req = Request(MBAPHeader(0, PROTOCOL_ID, length, 0),
+        auto req = Request(MBAPHeader(this.transactionId.atomicLoad, PROTOCOL_ID, length, 0),
                            ProtocolDataUnit(FunctionCode.ReadWriteMultipleRegisters, data));
+        atomicOp!"+="(this.transactionId, 1);
         return request(req);
     }
 }

@@ -1,4 +1,4 @@
-import vibe.vibe;
+import vibe.core.core : runApplication;
 import vibemodbus.tcp.server;
 
 

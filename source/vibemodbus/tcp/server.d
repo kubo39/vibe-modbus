@@ -53,7 +53,7 @@ interface ModbusRequestHandler
 
 TCPListener listenTCP(ushort port, ModbusRequestHandler handler, string address)
 {
-    return vibe.core.net.listenTCP(port, (TCPConnection conn) {
+    return vibe.core.net.listenTCP(port, (conn) {
             MBAPHeader header;
             Response res;
 

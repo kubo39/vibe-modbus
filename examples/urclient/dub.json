@@ -1,0 +1,10 @@
+{
+	"name": "urclient",
+	"authors": [
+		"Hiroki Noda"
+	],
+    "dependencies": {
+        "vibe-core": "1.3.0",
+        "vibe-modbus": {"path": "../../"}
+    },
+}

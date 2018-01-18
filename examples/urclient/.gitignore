@@ -1,0 +1,15 @@
+urclient
+.dub
+docs.json
+__dummy.html
+docs/
+urclient.so
+urclient.dylib
+urclient.dll
+urclient.a
+urclient.lib
+urclient-test-*
+*.exe
+*.o
+*.obj
+*.lst

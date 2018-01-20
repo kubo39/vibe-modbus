@@ -3,7 +3,6 @@ module vibemodbus.tcp.common;
 import std.bitmanip : read, write;
 import std.system : Endian;
 
-import vibemodbus.exception;
 public import vibemodbus.protocol.common;
 public import vibemodbus.protocol.tcp;
 

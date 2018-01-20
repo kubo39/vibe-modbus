@@ -5,7 +5,6 @@ import std.system : Endian;
 
 import vibe.core.net;
 
-public import vibemodbus.exception;
 public import vibemodbus.protocol.common;
 public import vibemodbus.protocol.tcp;
 public import vibemodbus.tcp.common;

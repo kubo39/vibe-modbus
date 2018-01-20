@@ -196,7 +196,7 @@ unittest
                       0x1, 0x0, 0x0]);
 }
 
-void decodeMBAPHeader(ref ubyte[] data, MBAPHeader* header)
+void decodeMBAPHeader(ref ubyte[] data, ref MBAPHeader header)
     @safe {
     // Start parsing MBAP header.
     auto transactionId = data.read!(ushort, Endian.bigEndian);
@@ -212,7 +212,7 @@ void decodeMBAPHeader(ref ubyte[] data, MBAPHeader* header)
     header.unitId = unitId;
 }
 
-void decodePDU(ubyte[] data, ProtocolDataUnit* pdu)
+void decodePDU(ubyte[] data, ref ProtocolDataUnit pdu)
     @safe {
     pdu.functionCode = data[0];
     pdu.data = data[1..$];
@@ -222,15 +222,15 @@ unittest
 {
     ProtocolDataUnit pdu;
     ubyte[] data = [0x1, 0x0, 0x0];
-    decodePDU(data, &pdu);
+    decodePDU(data, pdu);
     assert(pdu.functionCode == FunctionCode.ReadCoils);
     assert(pdu.data == [0x0, 0x0]);
 }
 
-void decodeADU(ubyte[] buffer, TCPApplicationDataUnit* adu)
+void decodeADU(ubyte[] buffer, ref TCPApplicationDataUnit adu)
     @safe {
-    decodeMBAPHeader(buffer, &adu.header);
-    decodePDU(buffer[0 .. (adu.header.length - 1)], &adu.pdu);
+    decodeMBAPHeader(buffer, adu.header);
+    decodePDU(buffer[0 .. (adu.header.length - 1)], adu.pdu);
 }
 
 unittest
@@ -243,7 +243,7 @@ unittest
                       0x1,        // function code
                       0x0, 0x0, 0x0, 0x0  // data
         ];
-    decodeADU(buffer, &adu);
+    decodeADU(buffer, adu);
     assert(adu.header == MBAPHeader(0x11, 0x0, 0x6, 0x0));
     assert(adu.pdu.functionCode == FunctionCode.ReadCoils);
     assert(adu.pdu.data == [0x0, 0x0, 0x0, 0x0]);

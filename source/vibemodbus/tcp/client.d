@@ -48,12 +48,12 @@ class Client
         // Read response data.
         ubyte[] responseHeader = new ubyte[MBAP_HEADER_LEN];
         this.conn.read(responseHeader);
-        decodeMBAPHeader(responseHeader, &res.header);
+        decodeMBAPHeader(responseHeader, res.header);
 
         // Read response data.
         ubyte[] responsePdu = new ubyte[res.header.length - 1];
         this.conn.read(responsePdu);
-        decodePDU(responsePdu, &res.pdu);
+        decodePDU(responsePdu, res.pdu);
         return res;
     }
 

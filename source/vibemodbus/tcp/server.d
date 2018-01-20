@@ -71,7 +71,7 @@ void handleRequest(TCPConnection conn, MODBUSRequestHandler handler)
 
     try {
         conn.read(request_allocator[0 .. MBAP_HEADER_LEN]);
-        () @trusted { decodeMBAPHeader(request_allocator, &header); } ();
+        () @trusted { decodeMBAPHeader(request_allocator, header); } ();
     } catch (Exception ex) {
         conn.close();
         return;

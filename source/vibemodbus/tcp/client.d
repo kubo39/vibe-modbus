@@ -15,6 +15,7 @@ class Client
 {
     string host;
     ushort port;
+    TCPConnection conn;
     shared ushort transactionId;
 
     this(string host, ushort port)
@@ -24,31 +25,35 @@ class Client
         this.transactionId = 0;
     }
 
+    ~this()
+    {
+        this.conn.finalize();
+        this.conn.close();
+    }
+
+    void connect()
+    {
+        this.conn = connectTCP(this.host, this.port);
+    }
+
     Response request(Request req)
     {
-        auto conn = connectTCP(this.host, this.port);
-        scope (exit) {
-            conn.finalize();
-            conn.close();
-        }
-
         ubyte[] buffer = new ubyte[MBAP_HEADER_LEN + req.header.length - 1];
         encodeADU(buffer, req);
-        conn.write(buffer);
-        conn.flush();
+        this.conn.write(buffer);
+        this.conn.flush();
 
         Response res;
 
         // Read response data.
         ubyte[] responseHeader = new ubyte[MBAP_HEADER_LEN];
-        conn.read(responseHeader);
-        decodeMBAPHeader(responseHeader, &res.header);
+        this.conn.read(responseHeader);
+        decodeMBAPHeader(responseHeader, res.header);
 
         // Read response data.
         ubyte[] responsePdu = new ubyte[res.header.length - 1];
-        conn.read(responsePdu);
-        decodePDU(responsePdu, &res.pdu);
-
+        this.conn.read(responsePdu);
+        decodePDU(responsePdu, res.pdu);
         return res;
     }
 

@@ -2,9 +2,9 @@ import vibe.core.core : runApplication;
 import vibemodbus.tcp.server;
 
 
-class ZeroHandler : ModbusRequestHandler
+class ZeroHandler : MODBUSRequestHandler
 {
-    void onReadCoils(const ReadCoilsRequest* req, Response* res)
+    void onReadCoils(ref const ReadCoilsRequest req, ref Response res) @safe
     {
         res.pdu.data = [
             0x1,  // Byte count
@@ -12,7 +12,7 @@ class ZeroHandler : ModbusRequestHandler
             ];
     }
 
-    void onReadDiscreteInputs(const ReadDiscreteInputsRequest* req, Response* res)
+    void onReadDiscreteInputs(ref const ReadDiscreteInputsRequest req, ref Response res) @safe
     {
         res.pdu.data = [
             0x1,  // Byte count
@@ -20,7 +20,7 @@ class ZeroHandler : ModbusRequestHandler
             ];
     }
 
-    void onReadHoldingRegisters(const ReadHoldingRegistersRequest* req, Response* res)
+    void onReadHoldingRegisters(ref const ReadHoldingRegistersRequest req, ref Response res)
     {
         res.pdu.data = [
             0x2,      // Byte count
@@ -28,7 +28,7 @@ class ZeroHandler : ModbusRequestHandler
             ];
     }
 
-    void onReadInputRegisters(const ReadInputRegistersRequest* req, Response* res)
+    void onReadInputRegisters(ref const ReadInputRegistersRequest req, ref Response res)
     {
         res.pdu.data = [
             0x2,     // Byte count
@@ -36,7 +36,7 @@ class ZeroHandler : ModbusRequestHandler
             ];
     }
 
-    void onWriteSingleCoil(const WriteSingleCoilRequest* req, Response* res)
+    void onWriteSingleCoil(ref const WriteSingleCoilRequest req, ref Response res)
     {
         res.pdu.data = [
             0x0, 0x0,  // Output Address
@@ -44,7 +44,7 @@ class ZeroHandler : ModbusRequestHandler
             ];
     }
 
-    void onWriteSingleRegister(const WriteSingleRegisterRequest* req, Response* res)
+    void onWriteSingleRegister(ref const WriteSingleRegisterRequest req, ref Response res)
     {
         res.pdu.data = [
             0x0, 0x0,  // Register Address
@@ -52,7 +52,7 @@ class ZeroHandler : ModbusRequestHandler
             ];
     }
 
-    void onWriteMultipleCoils(const WriteMultipleCoilsRequest* req, Response* res)
+    void onWriteMultipleCoils(ref const WriteMultipleCoilsRequest req, ref Response res)
     {
         res.pdu.data = [
             0x0, 0x0,  // Starting Address
@@ -60,7 +60,7 @@ class ZeroHandler : ModbusRequestHandler
             ];
     }
 
-    void onWriteMultipleRegisters(const WriteMultipleRegistersRequest* req, Response* res)
+    void onWriteMultipleRegisters(ref const WriteMultipleRegistersRequest req, ref Response res)
     {
         res.pdu.data = [
             0x0, 0x0,  // Startng Address

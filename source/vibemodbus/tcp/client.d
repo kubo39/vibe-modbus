@@ -2,7 +2,6 @@ module vibemodbus.tcp.client;
 
 import core.atomic : atomicOp, atomicLoad;
 import std.bitmanip : read, write;
-import std.exception : enforce;
 import std.system : Endian;
 
 import vibe.core.net;
@@ -44,7 +43,6 @@ class Client
         // Read response data.
         ubyte[] responseHeader = new ubyte[MBAP_HEADER_LEN];
         conn.read(responseHeader);
-        enforce!TooSmallADU(responseHeader.length >= MBAP_HEADER_LEN, "Too small ADU length.");
         decodeMBAPHeader(responseHeader, &res.header);
 
         // Read response data.

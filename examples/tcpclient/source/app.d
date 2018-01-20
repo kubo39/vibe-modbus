@@ -55,6 +55,7 @@ void callWriteMultipleRegisters(Client client)
 void main()
 {
     auto client = new Client("localhost", 40960);
+    client.connect();
 
     client.callReadHoldingRegisters();
     writeln("\n");

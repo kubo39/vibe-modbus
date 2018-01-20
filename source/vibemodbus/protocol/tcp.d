@@ -32,12 +32,6 @@ struct ProtocolDataUnit
     ubyte[] data;
 }
 
-struct ModbusError
-{
-    ubyte functionCode;
-    ExceptionCode exceptionCode;
-}
-
 struct TCPApplicationDataUnit
 {
     MBAPHeader header;

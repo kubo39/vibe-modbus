@@ -57,7 +57,7 @@ void handleMODBUSConnection(TCPConnection conn, MODBUSRequestHandler handler)
 
     while (!conn.empty)
     {
-		() @trusted {
+        () @trusted {
             handleRequest(conn, handler);
         } ();
     }

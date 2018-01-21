@@ -54,7 +54,6 @@ ushort baseJointAngle(Client client)
 void main()
 {
     auto client = new Client("192.168.1.110", 502);
-    client.connect();
     writeln("Controller Version: ", client.controllerVersion);
     writeln("RobotMode: ", client.robotMode);
     writeln("Is PowerOn Robot?: ", client.isPowerOnRobot);

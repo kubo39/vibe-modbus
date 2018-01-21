@@ -22,6 +22,7 @@ class Client
     {
         this.host = host;
         this.port = port;
+        this.conn = connectTCP(this.host, this.port);
         this.transactionId = 0;
     }
 
@@ -29,11 +30,6 @@ class Client
     {
         this.conn.finalize();
         this.conn.close();
-    }
-
-    void connect()
-    {
-        this.conn = connectTCP(this.host, this.port);
     }
 
     Response request(Request req)

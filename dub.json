@@ -8,5 +8,5 @@
 	},
 	"description": "vibe-core based MODBUS messaging on TCP/IP.",
 	"copyright": "Copyright © 2018, Hiroki Noda",
-	"license": "proprietary"
+	"license": "MIT"
 }

@@ -10,7 +10,6 @@ public import vibemodbus.protocol.common;
 public import vibemodbus.protocol.tcp;
 public import vibemodbus.tcp.common;
 
-
 void writeResponse(TCPConnection conn, ref Response res)
     @trusted {
     ubyte[] buffer = new ubyte[MBAP_HEADER_LEN + res.header.length - 1];
@@ -327,4 +326,11 @@ TCPListener listenTCP(ushort port, MODBUSRequestHandler handler, string address)
                 catch (Exception e) logError("Failed to close connection: %s", e.msg);
             }
         }, address);
+}
+
+
+shared static this()
+{
+    import core.sys.posix.signal;
+    assert(signal(SIGPIPE, SIG_IGN) != SIG_ERR);
 }

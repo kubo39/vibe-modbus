@@ -1,5 +1,6 @@
 module vibemodbus.tcp.server;
 
+import core.time : seconds;
 import std.bitmanip : read, write;
 import std.system : Endian;
 
@@ -319,8 +320,10 @@ void handleRequest(TCPConnection conn, MODBUSRequestHandler handler)
 TCPListener listenTCP(ushort port, MODBUSRequestHandler handler, string address)
 {
     return vibe.core.net.listenTCP(port, (conn) @safe nothrow {
-            try handleMODBUSConnection(conn, handler);
-            catch (Exception e) {
+            try {
+                conn.readTimeout(5.seconds);
+                handleMODBUSConnection(conn, handler);
+            } catch (Exception e) {
                 debug logDebug("Full error: %s", () @trusted { return e.toString(); } ());
                 try conn.close();
                 catch (Exception e) logError("Failed to close connection: %s", e.msg);

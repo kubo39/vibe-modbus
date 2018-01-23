@@ -1,14 +1,17 @@
 import std.bitmanip : read;
+import std.format : format;
 import std.stdio;
 import std.system : Endian;
 
 import vibemodbus.tcp.client;
 
-ushort controllerVersion(Client client)
+string controllerVersion(Client client)
 {
-    auto res = client.readHoldingRegisters(256, 1);
+    auto res = client.readHoldingRegisters(256, 2);
     ubyte _ = res.pdu.data.read!(ubyte, Endian.bigEndian);
-    return res.pdu.data.read!(ushort, Endian.bigEndian);
+    auto versionHigh = res.pdu.data.read!(ushort, Endian.bigEndian);
+    auto versionLow = res.pdu.data.read!(ushort, Endian.bigEndian);
+    return format("%d.%d", versionHigh, versionLow);
 }
 
 string robotMode(Client client)
@@ -44,19 +47,19 @@ bool isEmergencyStopped(Client client)
     return res.pdu.data.read!(ubyte, Endian.bigEndian) == 1;
 }
 
-ushort baseJointAngle(Client client)
+ushort baseJointTemperature(Client client)
 {
-    auto res = client.readHoldingRegisters(280, 1);
+    auto res = client.readHoldingRegisters(300, 1);
     ubyte _ = res.pdu.data.read!(ubyte, Endian.bigEndian);
     return res.pdu.data.read!(ushort, Endian.bigEndian);
 }
 
 void main()
 {
-    auto client = new Client("192.168.1.110", 502);
+    auto client = new Client("192.168.1.114", 502);
     writeln("Controller Version: ", client.controllerVersion);
     writeln("RobotMode: ", client.robotMode);
     writeln("Is PowerOn Robot?: ", client.isPowerOnRobot);
     writeln("Is EmergencyStopped?: ", client.isEmergencyStopped);
-    writeln("BaseJointAngle: ", client.baseJointAngle);
+    writeln("BaseJointTemperature: ", client.baseJointTemperature);
 }

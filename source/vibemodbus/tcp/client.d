@@ -1,5 +1,6 @@
 module vibemodbus.tcp.client;
 
+import std.algorithm : max;
 import core.atomic : atomicOp, atomicLoad;
 import std.bitmanip : read, write;
 import std.system : Endian;
@@ -151,7 +152,7 @@ class Client
         assert(index == 2);
         data.write!(ushort, Endian.bigEndian)(quantity, &index);
         assert(index == 4);
-        data[4] = cast(ubyte)(outputsValue.length / 8 + 1);
+        data[4] = cast(ubyte)(max(quantity / 8, 1));
         data[5 .. $] = outputsValue;
         auto length = cast(short)(1 + 1 + data.length);
         auto req = Request(MBAPHeader(this.transactionId.atomicLoad, PROTOCOL_ID, length, 0),

@@ -54,6 +54,22 @@ ushort baseJointTemperature(Client client)
     return res.pdu.data.read!(ushort, Endian.bigEndian);
 }
 
+auto writeOutputs(Client client)
+{
+    auto res = client.writeMultipleCoils(16, 8, [0]);
+    auto address = res.pdu.data.read!(ushort, Endian.bigEndian);
+    auto outputs = res.pdu.data.read!(ushort, Endian.bigEndian);
+    return outputs;
+}
+
+auto toolOutputVoltage(Client client)
+{
+    auto res = client.writeSingleRegister(20, 0);
+    auto address = res.pdu.data.read!(ushort, Endian.bigEndian);
+    auto outputs = res.pdu.data.read!(ushort, Endian.bigEndian);
+    return outputs;
+}
+
 void main()
 {
     auto client = new Client("192.168.1.114", 502);
@@ -62,4 +78,6 @@ void main()
     writeln("Is PowerOn Robot?: ", client.isPowerOnRobot);
     writeln("Is EmergencyStopped?: ", client.isEmergencyStopped);
     writeln("BaseJointTemperature: ", client.baseJointTemperature);
+    writeln("Write outputs: ", client.writeOutputs);
+    writeln("Write output voltage: ", client.toolOutputVoltage);
 }
